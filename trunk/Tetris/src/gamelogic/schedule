@@ -1,0 +1,4 @@
+Friday, January 9, 2009
+- get piece to minimize
+- place minimized piece into grid and fix up the "border gap bug"
+- start on piece collision detection
