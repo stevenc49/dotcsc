@@ -1,0 +1,120 @@
+# depslib dependency file v1.0
+1237184667 source:c:\users\admin\documents\cb projects\duckhunt\duckhunt\functions.cpp
+	"SDL/SDL.h"
+	"SDL/SDL_image.h"
+	"SDL/SDL_ttf.h"
+	<string>
+	"constants.h"
+	"functions.h"
+	"globals.h"
+
+1236826717 c:\users\admin\documents\cb projects\duckhunt\duckhunt\constants.h
+
+1236826717 c:\users\admin\documents\cb projects\duckhunt\duckhunt\functions.h
+	"SDL/SDL.h"
+	"SDL/SDL_image.h"
+	<string>
+
+1237184978 c:\users\admin\documents\cb projects\duckhunt\duckhunt\globals.h
+	"SDL/SDL.h"
+	"SDL/SDL_ttf.h"
+
+1237184868 source:c:\users\admin\documents\cb projects\duckhunt\duckhunt\globals.cpp
+	"SDL/SDL.h"
+	"SDL/SDL_ttf.h"
+	"globals.h"
+
+1237184911 source:c:\users\admin\documents\cb projects\duckhunt\duckhunt\main.cpp
+	"SDL/SDL.h"
+	"SDL/SDL_image.h"
+	<string>
+	"constants.h"
+	"bird.h"
+	"timer.h"
+	"functions.h"
+	"globals.h"
+
+1237004688 c:\users\admin\documents\cb projects\duckhunt\duckhunt\classes.h
+
+1237004835 source:c:\users\admin\documents\cb projects\duckhunt\duckhunt\timer.cpp
+	"SDL/SDL.h"
+	"timer.h"
+
+1237004844 source:c:\users\admin\documents\cb projects\duckhunt\duckhunt\dot.cpp
+	"SDL/SDL.h"
+	"SDL/SDL_image.h"
+	<string>
+	"constants.h"
+	"dot.h"
+	"functions.h"
+	"globals.h"
+
+1237005182 c:\users\admin\documents\cb projects\duckhunt\duckhunt\dot.h
+
+1237005161 c:\users\admin\documents\cb projects\duckhunt\duckhunt\timer.h
+
+1237011214 c:\users\admin\documents\cb projects\duckhunt\duckhunt\bird.h
+
+1237011112 source:c:\users\admin\documents\cb projects\duckhunt\duckhunt\bird.cpp
+	"SDL/SDL.h"
+	"SDL/SDL_image.h"
+	<string>
+	"constants.h"
+	"bird.h"
+	"functions.h"
+	"globals.h"
+
+1237955290 source:c:\users\admin\documents\cb projects\duckhunt\functions.cpp
+	"SDL/SDL.h"
+	"SDL/SDL_image.h"
+	"SDL/SDL_ttf.h"
+	<string>
+	"constants.h"
+	"functions.h"
+	"globals.h"
+
+1237955695 c:\users\admin\documents\cb projects\duckhunt\constants.h
+
+1237758826 c:\users\admin\documents\cb projects\duckhunt\functions.h
+	"SDL/SDL.h"
+	"SDL/SDL_image.h"
+	<string>
+
+1237955269 c:\users\admin\documents\cb projects\duckhunt\globals.h
+	"SDL/SDL.h"
+	"SDL/SDL_ttf.h"
+	"timer.h"
+	<string>
+
+1237955318 source:c:\users\admin\documents\cb projects\duckhunt\globals.cpp
+	"SDL/SDL.h"
+	"SDL/SDL_ttf.h"
+	"globals.h"
+
+1237952754 source:c:\users\admin\documents\cb projects\duckhunt\main.cpp
+	"SDL/SDL.h"
+	"SDL/SDL_image.h"
+	<string>
+	"constants.h"
+	"bird.h"
+	"timer.h"
+	"functions.h"
+	"globals.h"
+
+1237949134 c:\users\admin\documents\cb projects\duckhunt\bird.h
+
+1237189139 c:\users\admin\documents\cb projects\duckhunt\timer.h
+
+1237189138 source:c:\users\admin\documents\cb projects\duckhunt\timer.cpp
+	"SDL/SDL.h"
+	"timer.h"
+
+1237955302 source:c:\users\admin\documents\cb projects\duckhunt\bird.cpp
+	"SDL/SDL.h"
+	"SDL/SDL_image.h"
+	<string>
+	"constants.h"
+	"bird.h"
+	"functions.h"
+	"globals.h"
+
