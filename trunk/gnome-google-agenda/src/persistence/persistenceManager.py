@@ -1,8 +1,8 @@
 def get_username():
-    #return 'viva.o.mauricio'
+    return 'dotcsc'
 
 def get_password():
-    #return 'megumidatsu'
+    return 'testpass'
 
 def save_account(usr, pw):
     pass

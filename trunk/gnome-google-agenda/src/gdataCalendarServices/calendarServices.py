@@ -37,3 +37,4 @@ class GoogleCalendarServices():
     
 def get_new_instance(account):
     return GoogleCalendarServices(account)
+
