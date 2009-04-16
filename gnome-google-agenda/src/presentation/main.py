@@ -3,6 +3,7 @@
 import pygtk
 import gtk
 import gobject
+
 from eventmanagement import EventTreeView
 
 from serviceLayer.loginService import LoginService
@@ -37,7 +38,7 @@ class MainWindow:
         about_dlg.run()
 
     def connect(self, widget=None, event=None, data=None):
-        self.log.write('-- trying to connect')
+        self.log.write('-- tcrying to connect')
 
         service = LoginService(self.initdomain)
         
@@ -61,8 +62,14 @@ class MainWindow:
         #self.log.write('-- inserting a new quick event')
         #service = AddQuickEventService(self.initdomain)
         #self.log.write('-- new quick event added')
-        
+
+        service = AddQuickEventService(self.initdomain)
         r = service.execute(str)
+
+        if not r:
+            print 'new event added'
+        else:
+            print 'event failed to add'
 
     def delete_event(self, widget=None, event=None, data=None):
         gtk.main_quit()
