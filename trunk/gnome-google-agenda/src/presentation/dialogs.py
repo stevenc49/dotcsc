@@ -60,10 +60,14 @@ class AddQuickEvent_window(AddEventWindow):
         vbox.pack_start(label)
         textentry = gtk.Entry()
         textentry.set_max_length(500)
-        vbox.add(textentry)
+        button = gtk.Button("Go")
 
+        vbox.add(textentry)
+        vbox.add(button)
+        
         self.w.add(vbox)
 
+        button.show()
         label.show()
         vbox.show()
         textentry.show()
