@@ -57,19 +57,7 @@ class MainWindow:
             self.clear_statusbar()
 
     def addQuickEvent(self, widget=None, event=None, data=None):
-        str = "Do stuff tomorrow"
-        qevent_window = dialogs.AddQuickEvent_window(self.w)
-        #self.log.write('-- inserting a new quick event')
-        #service = AddQuickEventService(self.initdomain)
-        #self.log.write('-- new quick event added')
-
-        service = AddQuickEventService(self.initdomain)
-        r = service.execute(str)
-
-        if not r:
-            print 'new event added'
-        else:
-            print 'event failed to add'
+        dialogs.AddQuickEvent_window(self.w, self.initdomain)
 
     def delete_event(self, widget=None, event=None, data=None):
         gtk.main_quit()

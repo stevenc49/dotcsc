@@ -2,6 +2,8 @@ import pygtk
 import gtk
 import globalinformation as info
 
+from serviceLayer.addquickeventService import AddQuickEventService
+
 class ADialog:
     '''Abstract Dialog'''
     def __init__(self, parent):
@@ -50,7 +52,8 @@ class AddEventWindow:
         
 class AddQuickEvent_window(AddEventWindow):
     '''window with a text entry'''
-    def __init__(self, parent):
+
+    def __init__(self, parent, domain):
         AddEventWindow.__init__(self, parent)
         self.w.set_title('New Quick Event')        
         vbox = gtk.VBox()
@@ -72,5 +75,20 @@ class AddQuickEvent_window(AddEventWindow):
         vbox.show()
         textentry.show()
         self.show()
-        
 
+        button.connect("clicked", self.addNewQuickEvent_Event, domain, textentry)
+
+    def addNewQuickEvent_Event(self, widget, domain, textbox):
+        '''This is a callback function.
+        It requires the domain (user account info) and the
+        textbox,which has the quick event string, as parameters'''
+        
+        str = textbox.get_text()
+
+        service = AddQuickEventService(domain)
+        r = service.execute(str)
+
+        if not r:
+            print 'new event added'
+        else:
+            print 'event failed to add'
