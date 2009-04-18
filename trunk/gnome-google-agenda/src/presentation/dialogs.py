@@ -80,8 +80,8 @@ class AddQuickEvent_window(AddEventWindow):
 
     def addNewQuickEvent_Event(self, widget, domain, textbox):
         '''This is a callback function.
-        It requires the domain (user account info) and the
-        textbox,which has the quick event string, as parameters'''
+        The parameters needed are the domain (user account info) and
+        the textbox, which has the quick event string'''
         
         str = textbox.get_text()
 
