@@ -8,6 +8,7 @@ from eventmanagement import EventTreeView
 
 from serviceLayer.loginService import LoginService
 from serviceLayer.addquickeventService import AddQuickEventService
+from serviceLayer.getEventsService import GetEventsService
 from serviceLayer.initdomain import InitDomain
 
 import dialogs
@@ -38,6 +39,7 @@ class MainWindow:
         about_dlg.run()
 
     def connect(self, widget=None, event=None, data=None):
+        #login
         self.log.write('-- tcrying to connect')
 
         service = LoginService(self.initdomain)
@@ -51,10 +53,13 @@ class MainWindow:
             self.log.write('-- just logged in')    
         
             self.set_statusbar('Loading Timeline')
+
+        #list events
+        service = GetEventsService(self.initdomain)
+        service.execute()
         
-        
-            self.e.load()
-            self.clear_statusbar()
+        #self.e.load()
+        self.clear_statusbar()
 
     def addQuickEvent(self, widget=None, event=None, data=None):
         dialogs.AddQuickEvent_window(self.w, self.initdomain)
@@ -97,7 +102,7 @@ class MainWindow:
         self.w.connect("delete_event", self.delete_event)
         
         vbox = gtk.VBox()
-        
+
         self.treeview = self.e.get_widget()
 
         # create a UIManager instance
