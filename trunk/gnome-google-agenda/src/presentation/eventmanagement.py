@@ -31,6 +31,14 @@ class EventTreeView:
     def append_date(self, date):
         self.store.append([date, '#C3D9FF'])
 
+    def sort_events_by_date(self, events):
+        print 'in sorts()'
+
+        for (key, value) in events.items():
+            print "Key = ", key, " Value = " , value
+
+        # TODO: order-by-date algorithm here
+
     def load(self):
         self.append_date('Today Dec 7')
         self.append_event('Fazer compras')        

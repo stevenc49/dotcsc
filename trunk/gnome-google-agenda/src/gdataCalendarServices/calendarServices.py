@@ -49,7 +49,6 @@ class GoogleCalendarServices():
             print '\t\tStart time: %s' % (a_when.start_time,)
             print '\t\tEnd time:   %s' % (a_when.end_time,)
           dict_events [i] =  an_event
-    #      list_events.append(an_event)
 
         return dict_events
 

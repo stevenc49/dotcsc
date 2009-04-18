@@ -40,7 +40,7 @@ class MainWindow:
 
     def connect(self, widget=None, event=None, data=None):
         #login
-        self.log.write('-- tcrying to connect')
+        self.log.write('-- trying to connect')
 
         service = LoginService(self.initdomain)
         
@@ -56,7 +56,11 @@ class MainWindow:
 
         #list events
         service = GetEventsService(self.initdomain)
+
         service.execute()
+        r = service.get_result()
+
+        self.e.sort_events_by_date(r)
         
         #self.e.load()
         self.clear_statusbar()
