@@ -58,15 +58,15 @@ class MainWindow:
         service = GetEventsService(self.initdomain)
 
         service.execute()
-        r = service.get_result()
+        events = service.get_result()
 
-        tree_view_list =  self.e.order_events_by_date(r)
+        tree_view_list =  self.e.order_events_by_date(events)
         self.e.load(tree_view_list)
 
         self.clear_statusbar()
 
-    def addQuickEvent(self, widget=None, event=None, data=None):
-        dialogs.AddQuickEvent_window(self.w, self.initdomain)
+    def addQuickEvent(self, widget=None, eventtreeview=None, liststore=None, event=None, data=None):
+        dialogs.AddQuickEvent_window(self.w, self.e, self.liststore, self.initdomain)
 
     def delete_event(self, widget=None, event=None, data=None):
         gtk.main_quit()
@@ -107,8 +107,9 @@ class MainWindow:
         
         vbox = gtk.VBox()
 
-        self.treeview = self.e.get_widget()
-        
+        self.treeview = self.e.get_treeview()
+        self.liststore = self.e.get_liststore()
+
         # create a UIManager instance
         uimanager = gtk.UIManager()
 
@@ -128,8 +129,6 @@ class MainWindow:
                                  ('File', None, '_File'),
                                  ('Help', None, '_Help')
                                  ])
-
-        # actiongroup.add_toggle_actions([()])
 
         # add actiongroup to uimanager
         uimanager.insert_action_group(actiongroup, 0)

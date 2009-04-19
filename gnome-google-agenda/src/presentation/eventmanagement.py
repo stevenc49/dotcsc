@@ -29,7 +29,7 @@ class EventTreeView:
         self.view.show()
 
     def append_event(self, event):
-        self.store.append([event, None]) 
+        self.store.append([event, None])
         
     def append_date(self, date):
         self.store.append([date, '#C3D9FF'])
@@ -83,5 +83,8 @@ class EventTreeView:
 
         self.view.show()
 
-    def get_widget(self):
+    def get_treeview(self):
         return self.view
+
+    def get_liststore(self):
+        return self.store
