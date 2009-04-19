@@ -3,6 +3,7 @@ import gtk
 import globalinformation as info
 
 from serviceLayer.addquickeventService import AddQuickEventService
+from serviceLayer.getEventsService import GetEventsService
 
 class ADialog:
     '''Abstract Dialog'''
@@ -53,7 +54,7 @@ class AddEventWindow:
 class AddQuickEvent_window(AddEventWindow):
     '''window with a text entry'''
 
-    def __init__(self, parent, domain):
+    def __init__(self, parent, event_tree_view_obj, liststore, domain):
         AddEventWindow.__init__(self, parent)
         self.w.set_title('New Quick Event')        
         vbox = gtk.VBox()
@@ -76,9 +77,9 @@ class AddQuickEvent_window(AddEventWindow):
         textentry.show()
         self.show()
 
-        button.connect("clicked", self.addNewQuickEvent_Event, domain, textentry)
+        button.connect("clicked", self.addNewQuickEvent_Event, event_tree_view_obj, liststore, domain, textentry)
 
-    def addNewQuickEvent_Event(self, widget, domain, textbox):
+    def addNewQuickEvent_Event(self, widget, event_tree_view_obj, liststore, domain, textbox):
         '''This is a callback function.
         The parameters needed are the domain (user account info) and
         the textbox, which has the quick event string'''
@@ -92,3 +93,15 @@ class AddQuickEvent_window(AddEventWindow):
             print 'new event added'
         else:
             print 'event failed to add'
+
+        # refresh treeview
+        liststore.clear()
+
+        #list events
+        service = GetEventsService(domain)
+
+        service.execute()
+        events = service.get_result()
+
+        tree_view_list =  event_tree_view_obj.order_events_by_date(events)
+        event_tree_view_obj.load(tree_view_list)
