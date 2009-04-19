@@ -63,7 +63,6 @@ class MainWindow:
         tree_view_list =  self.e.order_events_by_date(r)
         self.e.load(tree_view_list)
 
-        #self.e.load()
         self.clear_statusbar()
 
     def addQuickEvent(self, widget=None, event=None, data=None):
@@ -109,7 +108,7 @@ class MainWindow:
         vbox = gtk.VBox()
 
         self.treeview = self.e.get_widget()
-
+        
         # create a UIManager instance
         uimanager = gtk.UIManager()
 
