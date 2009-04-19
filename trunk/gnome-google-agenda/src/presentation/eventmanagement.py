@@ -25,9 +25,9 @@ class EventTreeView:
         
         self.column.add_attribute(self.cell, 'text', 0)
         self.column.add_attribute(self.cell, 'background',1)
-        
+
         self.view.show()
-        
+
     def append_event(self, event):
         self.store.append([event, None]) 
         
@@ -45,11 +45,15 @@ class EventTreeView:
 
         dates_sets = set(dates_list)
 
+        #turn it back into a list to preserve order
+        dates_list = list(dates_sets)
+        dates_list.sort()
+        
         # for each item in the Set, add to the tree_view_list
         tree_view_list = []
 
-        while( not len(dates_sets) == 0 ):            
-            tree_view_list.append( dates_sets.pop() )
+        while( not len(dates_list) == 0 ):
+            tree_view_list.append( dates_list.pop() )
 
         # for each event, add it to the list, after its start_time
         for (key, an_event) in events.items():
@@ -69,21 +73,15 @@ class EventTreeView:
 
     def load(self, tree_view_list):
 
-        date_regex = re.compile("\d\d\d\d-\d\d-\d\d")
+        date_regex = re.compile("\d\d\d\d-\d\d-\d\d.*?")
 
         for item in tree_view_list:
             if date_regex.match(item):
-                print item
+                self.append_date(item)
+            elif not date_regex.match(item):
+                self.append_event(item)
 
-#        self.append_date('Today Dec 7')
-#        self.append_event('Fazer compras')
-#        self.append_event('Arroz')
-#        self.append_event('8pm - Aula de cena')
-#
-#        self.append_date('Tomorrow Dec 8')
-#        self.append_event('Teste de SAD')
-#
-#        self.view.show()
+        self.view.show()
 
     def get_widget(self):
         return self.view
