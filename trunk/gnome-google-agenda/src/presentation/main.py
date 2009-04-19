@@ -60,8 +60,9 @@ class MainWindow:
         service.execute()
         r = service.get_result()
 
-        self.e.order_events_by_date(r)
-        
+        tree_view_list =  self.e.order_events_by_date(r)
+        self.e.load(tree_view_list)
+
         #self.e.load()
         self.clear_statusbar()
 

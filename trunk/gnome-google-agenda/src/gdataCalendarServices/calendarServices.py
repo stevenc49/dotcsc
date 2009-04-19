@@ -33,8 +33,6 @@ class GoogleCalendarServices():
         start_date='2009-04-01'
         end_date='2009-05-01'
 
-        print 'Date range query for events on Primary Calendar: %s to %s' % (
-            start_date, end_date,)
         query = gdata.calendar.service.CalendarEventQuery('default', 'private',
             'full')
         query.start_min = start_date
@@ -44,10 +42,6 @@ class GoogleCalendarServices():
 
         feed = self.cal_client.CalendarQuery(query)
         for i, an_event in zip(xrange(len(feed.entry)), feed.entry):
-          print '\t%s. %s' % (i, an_event.title.text,)
-          for a_when in an_event.when:
-            print '\t\tStart time: %s' % (a_when.start_time,)
-            print '\t\tEnd time:   %s' % (a_when.end_time,)
           dict_events [i] =  an_event
 
         return dict_events
