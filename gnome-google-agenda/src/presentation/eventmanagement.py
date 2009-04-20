@@ -64,13 +64,6 @@ class EventTreeView:
 
         return tree_view_list
 
-#        for item in tree_view_list:
-#            print item
-
-#        datestring = "2009-04-18"
-#        c = time.strptime(datestring,"%Y-%m-%d")
-#        print time.strftime("%d %b %Y",c)
-
     def load(self, tree_view_list):
 
         date_regex = re.compile("\d\d\d\d-\d\d-\d\d.*?")
@@ -82,6 +75,11 @@ class EventTreeView:
                 self.append_event(item)
 
         self.view.show()
+
+    def format_date(self, date):
+
+        c = time.strptime(date,"%Y-%m-%d")
+        return time.strftime("%d %b %Y",c)
 
     def get_treeview(self):
         return self.view
