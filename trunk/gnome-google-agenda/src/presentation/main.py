@@ -7,7 +7,6 @@ import gobject
 from eventmanagement import EventTreeView
 
 from serviceLayer.loginService import LoginService
-from serviceLayer.addquickeventService import AddQuickEventService
 from serviceLayer.getEventsService import GetEventsService
 from serviceLayer.initdomain import InitDomain
 
@@ -35,7 +34,7 @@ class MainWindow:
         self.set_statusbar("doing stuff")
 
     def show_about_dlg(self, widget=None, event=None, data=None):
-        about_dlg = dialogs.About_dlg(self.w)
+        about_dlg = dialogs.About_dlg(self.window)
         about_dlg.run()
 
     def connect(self, widget=None, event=None, data=None):
@@ -60,13 +59,13 @@ class MainWindow:
         service.execute()
         events = service.get_result()
 
-        tree_view_list =  self.e.order_events_by_date(events)
-        self.e.load(tree_view_list)
+        tree_view_list =  self.e_treeview.order_events_by_date(events)
+        self.e_treeview.load(tree_view_list)
 
         self.clear_statusbar()
 
-    def addQuickEvent(self, widget=None, eventtreeview=None, liststore=None, event=None, data=None):
-        dialogs.AddQuickEvent_window(self.w, self.e, self.liststore, self.initdomain)
+    def addQuickEvent(self, widget=None, data=None):
+        dialogs.AddQuickEvent_window(self.window, self.e_treeview, self.liststore, self.initdomain)
 
     def delete_event(self, widget=None, event=None, data=None):
         gtk.main_quit()
@@ -75,7 +74,7 @@ class MainWindow:
         return False
 
     def set_title(self):
-        self.w.set_title("google agenda")
+        self.window.set_title("google agenda")
         # TODO: fetch the username to compose the message
         # "agenda for viva.o.mauricio"        
         
@@ -87,35 +86,35 @@ class MainWindow:
         self.set_statusbar(" ") # TODO: this must be changed to statusbar.pop()
 
     def about_dialog(self, data = None):
-        #about = dialog.AboutDialog(self.w)
+        #about = dialog.AboutDialog(self.window)
         #about.response_is_cancel()
         pass
 
     def __init__(self):
     
         self.initdomain = InitDomain()
-        self.e = EventTreeView()
+        self.e_treeview = EventTreeView()
         self.log = self.initdomain.get_log()
         self.log.new_line()
         self.log.write('== start session')
         # defining a new window
-        self.w = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.w.set_size_request(200, 400)
+        self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.window.set_size_request(200, 400)
         self.set_title()
-        self.w.set_resizable(True)
-        self.w.connect("delete_event", self.delete_event)
+        self.window.set_resizable(True)
+        self.window.connect("delete_event", self.delete_event)
         
         vbox = gtk.VBox()
 
-        self.treeview = self.e.get_treeview()
-        self.liststore = self.e.get_liststore()
+        self.treeview = self.e_treeview.get_treeview()
+        self.liststore = self.e_treeview.get_liststore()
 
         # create a UIManager instance
         uimanager = gtk.UIManager()
 
         # add the accelerator group to the toplevel window
         accelgroup = uimanager.get_accel_group()
-        self.w.add_accel_group(accelgroup)
+        self.window.add_accel_group(accelgroup)
 
         # create an ActionGroup
         actiongroup = gtk.ActionGroup('menubar')
@@ -143,7 +142,7 @@ class MainWindow:
         vbox.pack_start(menubar, False, True, 0)
         vbox.add(self.treeview)
         vbox.pack_end(statusbar, False, True, 0)
-        self.w.add(vbox)
+        self.window.add(vbox)
 
         
         self.statusbar = statusbar
@@ -153,7 +152,7 @@ class MainWindow:
         self.statusbar.show()
         self.treeview.show()
         vbox.show()
-        self.w.show()
+        self.window.show()
 
 # calling the gtk event cicle
 def main():
