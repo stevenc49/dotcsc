@@ -3,7 +3,7 @@
 = Introduction =
 
 A simple application allows you to see your upcoming Google Calendar events on your Gnome desktop. <br>
-Useful for students who always have assignments, projects and exams unexpectedly come up (see screenshots).
+Useful for students who always have assignments, projects and exams unexpectedly come up (see screenshots). 
 
 = Details =
 
