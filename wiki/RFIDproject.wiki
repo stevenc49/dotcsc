@@ -1,5 +1,4 @@
-
-#Summary: Library Management System + RFID Book Tags Server
+#summary Library Management System + RFID Book Tags Server
 
 = Introduction =
 
