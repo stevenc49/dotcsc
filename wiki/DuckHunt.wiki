@@ -1,0 +1,10 @@
+#summary Duck Hunt
+
+= Introduction =
+
+This is an old project that I started to get familiar with graphics programming.<br>
+I don't work on it much anymore as more interesting projects have come up.<br>
+<br>
+I have a preview of it at 
+[dotcsc.googlecode.com http://dotcsc.googlecode.com/svn/trunk/duckhunt/img/duckhunt.gif]
+<br>The GIF image is pretty large so I had to slow down the frame rate in order to display it in the browser.
