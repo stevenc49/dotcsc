@@ -11,7 +11,7 @@ int main()
     char* num = (char*)malloc(MIL*sizeof(char));
 
     //num = "123456";    //read-only
-    strncpy(num, "26516156161616549816549618616518156156189156", MIL);
+    strncpy(num, "1234567", MIL);
 
     printf("%s\n", getPalin(num) );
 
@@ -22,19 +22,17 @@ char* getPalin(char* num)
 {
     int length = strlen(num);
 
-    if ( length % 2 == 0 )
+    if( length%2 == 0 )
     {
+        printf("even\n");
+
         char* front = num;
         char* end = num + strlen(num) - 1;    //pointer to end
-
-        *end = '0';
 
         //pointers not middle yet
         while( front != num + (length/2)-1 )
         {
             *end = *front;
-
-            //printf("%c", *end);
 
             front++;
             end--;
@@ -46,7 +44,6 @@ char* getPalin(char* num)
         mid[1] = *end;
         mid[2] = '\0';
 
-        //convert string to int
         int i = atoi(mid);
 
         if(i>=0 && i<11) {
@@ -78,7 +75,50 @@ char* getPalin(char* num)
             *end ='9';
         } else if (i=99)
             printf("i=99, need to carry over");
+    } else {
+        printf("odd\n");
+
+        char* front = num;
+        char* end = num + strlen(num);    //pointer to end
+
+        //pointers not middle yet
+        while( front != num + (length/2) )
+        {
+            *end = *front;
+
+            front++;
+            end--;
+        }
+
+        //pointers at mid
+        char mid[2];
+        mid[0] = *front;
+        mid[1] = '\0';
+
+        int i = atoi(mid);
+
+        if(i==0) {
+            *front = '1';
+        } else if (i=1) {
+            *front = '2';
+        } else if (i=2) {
+            *front = '3';
+        } else if (i=3) {
+            *front = '4';
+        } else if (i=4) {
+            *front = '5';
+        } else if (i=5) {
+            *front = '6';
+        } else if (i=6) {
+            *front = '7';
+        } else if (i=7) {
+            *front = '8';
+        } else if (i=8) {
+            *front = '9';
+        } else if (i=9)
+            printf("i=9, need to carry over");
     }
+
 
     return num;
 }
