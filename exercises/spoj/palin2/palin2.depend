@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1244055886 source:c:\exercises\spoj\palin2\palin2.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+
