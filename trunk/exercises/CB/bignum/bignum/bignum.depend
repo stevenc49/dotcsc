@@ -1,0 +1,4 @@
+# depslib dependency file v1.0
+1242847047 source:c:\exercises\cb\bignum\bignum\main.c
+	<stdio.h>
+
