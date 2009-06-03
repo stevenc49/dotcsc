@@ -11,7 +11,7 @@ int main()
     char* num = (char*)malloc(MIL*sizeof(char));
 
     //num = "123456";    //read-only
-    strncpy(num, "1234567", MIL);
+    strncpy(num, "2133", MIL);
 
     printf("%s\n", getPalin(num) );
 
@@ -79,7 +79,7 @@ char* getPalin(char* num)
         printf("odd\n");
 
         char* front = num;
-        char* end = num + strlen(num);    //pointer to end
+        char* end = num + strlen(num)-1;    //pointer to end
 
         //pointers not middle yet
         while( front != num + (length/2) )
@@ -99,26 +99,25 @@ char* getPalin(char* num)
 
         if(i==0) {
             *front = '1';
-        } else if (i=1) {
+        } else if (i==1) {
             *front = '2';
-        } else if (i=2) {
+        } else if (i==2) {
             *front = '3';
-        } else if (i=3) {
+        } else if (i==3) {
             *front = '4';
-        } else if (i=4) {
+        } else if (i==4) {
             *front = '5';
-        } else if (i=5) {
+        } else if (i==5) {
             *front = '6';
-        } else if (i=6) {
+        } else if (i==6) {
             *front = '7';
-        } else if (i=7) {
+        } else if (i==7) {
             *front = '8';
-        } else if (i=8) {
+        } else if (i==8) {
             *front = '9';
-        } else if (i=9)
+        } else if (i==9)
             printf("i=9, need to carry over");
     }
-
 
     return num;
 }
