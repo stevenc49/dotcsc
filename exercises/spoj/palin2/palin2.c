@@ -11,7 +11,7 @@ int main()
     char* num = (char*)malloc(MIL*sizeof(char));
 
     //num = "123456";    //read-only
-    strncpy(num, "12818", MIL);
+    strncpy(num, "10804", MIL);
 
     printf("\noriginal %s\n",num );
     printf("\npalin %s\n", getPalin(num) );
@@ -106,9 +106,6 @@ char* getPalin(char* num)
         char mid;
         mid = *front;
 
-        printf("mid_minus_one %c\n", mid_minus_one);
-        printf("*(front+1)  %c\n", *(front+1));
-
         if ( mid_plus_one > *(front+1))            //if old value > new value for mid_plus_one
         {                                           //then increment middle digit
             if(mid=='0') {
@@ -129,12 +126,10 @@ char* getPalin(char* num)
                 *front = '8';
             } else if (mid=='8') {
                 *front = '9';
-            } else if (mid=='9') {
-                printf("i=9, carrying over");
-
-//                *front = '0';
-//                *(front-1) = mid_minus_one + 1;
-//                *(end+1) = mid_minus_one + 1;
+            } else if (mid=='9') {  //false case: num=19994, 10904, 10804
+                *front = '0';
+                *(front-1) = mid_minus_one + 1;
+                *(end+1) = mid_minus_one + 1;
             }
         }
     }
