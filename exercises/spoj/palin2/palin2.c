@@ -11,7 +11,7 @@ int main()
     char* num = (char*)malloc(MIL*sizeof(char));
 
     //num = "123456";    //read-only
-    strncpy(num, "2133", MIL);
+    strncpy(num, "12868", MIL);
 
     printf("%s\n", getPalin(num) );
 
@@ -81,8 +81,8 @@ char* getPalin(char* num)
         char* front = num;
         char* end = num + strlen(num)-1;    //pointer to end
 
-        //pointers not middle yet
-        while( front != num + (length/2) )
+        //pointers not middle yet or not next to middle
+        while( front != num+(length/2) && end != num+(length/2)+1 )
         {
             *end = *front;
 
@@ -90,33 +90,64 @@ char* getPalin(char* num)
             end--;
         }
 
+        //pointers next to middle (save values next to mid for comparison later)
+        char mid_plus_one[2];
+        mid_plus_one[0] = *end;
+        mid_plus_one[1] = '\0';
+
+        char mid_minus_one[2];
+        mid_minus_one[0] = *front;
+        mid_minus_one[1] = '\0';
+
+        *end = *front;
+        front++;
+        end--;
+
         //pointers at mid
         char mid[2];
         mid[0] = *front;
         mid[1] = '\0';
 
-        int i = atoi(mid);
+        printf("old %s\n", mid_plus_one);
+//        printf("mid_minus_one %s\n", mid_minus_one);
 
-        if(i==0) {
-            *front = '1';
-        } else if (i==1) {
-            *front = '2';
-        } else if (i==2) {
-            *front = '3';
-        } else if (i==3) {
-            *front = '4';
-        } else if (i==4) {
-            *front = '5';
-        } else if (i==5) {
-            *front = '6';
-        } else if (i==6) {
-            *front = '7';
-        } else if (i==7) {
-            *front = '8';
-        } else if (i==8) {
-            *front = '9';
-        } else if (i==9)
-            printf("i=9, need to carry over");
+        int mid_comparator = atoi(mid);
+        int mid_plus_one_comparator = atoi(mid_plus_one);
+        int mid_minus_one_comparator = atoi(mid_minus_one);
+
+        printf("new %c\n", *(front+1));
+
+        printf("mid_comparator %d\n", mid_comparator);
+
+        if ( mid_plus_one_comparator > *(front+1))  //if old value > new value for mid_plus_one
+        {                                           //then increment middle digit
+            printf("in if\n");
+            if(mid_comparator==0) {
+                *front = '1';
+            } else if (mid_comparator==1) {
+                *front = '2';
+            } else if (mid_comparator==2) {
+                *front = '3';
+            } else if (mid_comparator==3) {
+                *front = '4';
+            } else if (mid_comparator==4) {
+                *front = '5';
+            } else if (mid_comparator==5) {
+                *front = '6';
+            } else if (mid_comparator==6) {
+                *front = '7';
+            } else if (mid_comparator==7) {
+                *front = '8';
+            } else if (mid_comparator==8) {
+                *front = '9';
+            } else if (mid_comparator==9) {
+                printf("i=9, carrying over");
+
+//                *front = '0';
+//                *(front-1) = mid_minus_one + 1;
+//                *(end+1) = mid_minus_one + 1;
+            }
+        }
     }
 
     return num;
