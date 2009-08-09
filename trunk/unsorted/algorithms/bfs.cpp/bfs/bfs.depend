@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1248050576 source:c:\users\admin\documents\dev\algorithms\bfs.cpp\bfs\bfs.cpp
+	<iostream>
+	<limits>
+	<map>
+	<list>
+	<queue>
+

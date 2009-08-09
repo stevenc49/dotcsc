@@ -1,0 +1,7 @@
+# depslib dependency file v1.0
+1245481854 source:c:\users\admin\documents\dev\spoj\prime1\prime1\prime1.cpp
+	<iostream>
+	<list>
+	<vector>
+	<math.h>
+
