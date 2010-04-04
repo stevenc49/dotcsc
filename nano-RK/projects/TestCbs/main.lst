@@ -1,0 +1,1968 @@
+   1               		.file	"main.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   7               		.global __do_copy_data
+   8               		.global __do_clear_bss
+  11               		.text
+  12               	.Ltext0:
+ 135               	.global	nrk_create_taskset
+ 137               	nrk_create_taskset:
+ 138               		.stabd	46,0,0
+   1:main.c        **** /******************************************************************************
+   2:main.c        **** *  Nano-RK, a real-time operating system for sensor networks.
+   3:main.c        **** *  Copyright (C) 2007, Real-Time and Multimedia Lab, Carnegie Mellon University
+   4:main.c        **** *  All rights reserved.
+   5:main.c        **** *
+   6:main.c        **** *  This is the Open Source Version of Nano-RK included as part of a Dual
+   7:main.c        **** *  Licensing Model. If you are unsure which license to use please refer to:
+   8:main.c        **** *  http://www.nanork.org/nano-RK/wiki/Licensing
+   9:main.c        **** *
+  10:main.c        **** *  This program is free software: you can redistribute it and/or modify
+  11:main.c        **** *  it under the terms of the GNU General Public License as published by
+  12:main.c        **** *  the Free Software Foundation, version 2.0 of the License.
+  13:main.c        **** *
+  14:main.c        **** *  This program is distributed in the hope that it will be useful,
+  15:main.c        **** *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  16:main.c        **** *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  17:main.c        **** *  GNU General Public License for more details.
+  18:main.c        **** *
+  19:main.c        **** *  You should have received a copy of the GNU General Public License
+  20:main.c        **** *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  21:main.c        **** *
+  22:main.c        **** *  Contributing Authors (specific to this file):
+  23:main.c        **** *  Zane Starr
+  24:main.c        **** *******************************************************************************/
+  25:main.c        **** 
+  26:main.c        **** 
+  27:main.c        **** #include <nrk.h>
+  28:main.c        **** #include <include.h>
+  29:main.c        **** #include <ulib.h>
+  30:main.c        **** #include <stdio.h>
+  31:main.c        **** #include <avr/sleep.h>
+  32:main.c        **** #include <hal.h>
+  33:main.c        **** #include <nrk_error.h>
+  34:main.c        **** #include <nrk_events.h>
+  35:main.c        **** #include <nrk_timer.h>
+  36:main.c        **** 
+  37:main.c        **** void my_nano_sleep(uint32_t nanos)
+  38:main.c        **** {
+  39:main.c        **** 	uint32_t micros;
+  40:main.c        **** 	uint16_t full_waits;
+  41:main.c        **** 	uint16_t remaining_waits;
+  42:main.c        **** 	uint16_t i;
+  43:main.c        **** 	
+  44:main.c        **** 	micros = nanos / 1000;
+  45:main.c        **** 	full_waits = micros / 65535;
+  46:main.c        **** 	remaining_waits = micros % 65535;
+  47:main.c        **** 	
+  48:main.c        **** 	printf("Sleep start (%lu nanos)\r\n", nanos);
+  49:main.c        **** 	
+  50:main.c        **** 	for(i = 0; i < full_waits; ++i)
+  51:main.c        **** 	{
+  52:main.c        **** 		nrk_spin_wait_us(65535);
+  53:main.c        **** 	}
+  54:main.c        **** 	if(remaining_waits)
+  55:main.c        **** 	{
+  56:main.c        **** 		nrk_spin_wait_us(remaining_waits);
+  57:main.c        **** 	}
+  58:main.c        **** 	
+  59:main.c        **** 	printf("Sleep end\r\n");
+  60:main.c        **** }
+  61:main.c        **** 
+  62:main.c        **** 
+  63:main.c        **** NRK_STK Stack1[NRK_APP_STACKSIZE];
+  64:main.c        **** nrk_task_type TaskOne;
+  65:main.c        **** void Task1(void);
+  66:main.c        **** 
+  67:main.c        **** 
+  68:main.c        **** NRK_STK Stack2[NRK_APP_STACKSIZE];
+  69:main.c        **** nrk_task_type TaskTwo;
+  70:main.c        **** void Task2 (void);
+  71:main.c        **** /*
+  72:main.c        **** NRK_STK Stack3[NRK_APP_STACKSIZE];
+  73:main.c        **** nrk_task_type TaskThree;
+  74:main.c        **** void Task3 (void);
+  75:main.c        **** 
+  76:main.c        **** NRK_STK Stack4[NRK_APP_STACKSIZE];
+  77:main.c        **** nrk_task_type TaskFour;
+  78:main.c        **** void Task4 (void);
+  79:main.c        **** 
+  80:main.c        **** NRK_STK Stack5[NRK_APP_STACKSIZE];
+  81:main.c        **** nrk_task_type TaskFive;
+  82:main.c        **** void Task5 (void);
+  83:main.c        **** 
+  84:main.c        **** NRK_STK Stack6[NRK_APP_STACKSIZE];
+  85:main.c        **** nrk_task_type TaskSix;
+  86:main.c        **** void Task6 (void);
+  87:main.c        **** 
+  88:main.c        **** NRK_STK Stack7[NRK_APP_STACKSIZE];
+  89:main.c        **** nrk_task_type TaskSeven;
+  90:main.c        **** void Task7 (void);
+  91:main.c        **** 
+  92:main.c        **** NRK_STK Stack8[NRK_APP_STACKSIZE];
+  93:main.c        **** nrk_task_type TaskEight;
+  94:main.c        **** void Task8 (void);
+  95:main.c        **** 
+  96:main.c        **** NRK_STK Stack9[NRK_APP_STACKSIZE];
+  97:main.c        **** nrk_task_type TaskNine;
+  98:main.c        **** void Task9 (void);
+  99:main.c        **** 
+ 100:main.c        **** NRK_STK Stack10[NRK_APP_STACKSIZE];
+ 101:main.c        **** nrk_task_type TaskTen;
+ 102:main.c        **** void Task10 (void);
+ 103:main.c        **** 
+ 104:main.c        **** NRK_STK Stack11[NRK_APP_STACKSIZE];
+ 105:main.c        **** nrk_task_type TaskEleven;
+ 106:main.c        **** void Task11 (void);
+ 107:main.c        **** 
+ 108:main.c        **** NRK_STK Stack12[NRK_APP_STACKSIZE];
+ 109:main.c        **** nrk_task_type TaskTwelve;
+ 110:main.c        **** void Task12 (void);
+ 111:main.c        **** 
+ 112:main.c        **** NRK_STK Stack13[NRK_APP_STACKSIZE];
+ 113:main.c        **** nrk_task_type TaskThirteen;
+ 114:main.c        **** void Task13 (void);
+ 115:main.c        **** 
+ 116:main.c        **** NRK_STK Stack14[NRK_APP_STACKSIZE];
+ 117:main.c        **** nrk_task_type TaskFourteen;
+ 118:main.c        **** void Task14 (void);
+ 119:main.c        **** 
+ 120:main.c        **** NRK_STK Stack15[NRK_APP_STACKSIZE];
+ 121:main.c        **** nrk_task_type TaskFifteen;
+ 122:main.c        **** void Task15 (void);
+ 123:main.c        **** 
+ 124:main.c        **** NRK_STK Stack16[NRK_APP_STACKSIZE];
+ 125:main.c        **** nrk_task_type TaskSixteen;
+ 126:main.c        **** void Task16 (void);
+ 127:main.c        ****  */
+ 128:main.c        **** 
+ 129:main.c        **** void nrk_create_taskset();
+ 130:main.c        **** 
+ 131:main.c        **** int
+ 132:main.c        **** main ()
+ 133:main.c        **** {
+ 134:main.c        ****   nrk_setup_ports();
+ 135:main.c        ****   nrk_setup_uart(UART_BAUDRATE_115K2);
+ 136:main.c        **** 
+ 137:main.c        ****   printf( "Starting up...\r\n" );
+ 138:main.c        ****   nrk_init();
+ 139:main.c        ****   nrk_time_set(0,0);
+ 140:main.c        ****   nrk_create_taskset ();
+ 141:main.c        ****   nrk_start();
+ 142:main.c        ****   
+ 143:main.c        ****   return 0;
+ 144:main.c        **** }
+ 145:main.c        **** 
+ 146:main.c        **** 
+ 147:main.c        **** void Task1()
+ 148:main.c        **** {
+ 149:main.c        **** uint16_t cnt;
+ 150:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 151:main.c        ****   printf( "Task1 PID=%d\r\n",nrk_get_pid());
+ 152:main.c        ****   cnt=0;
+ 153:main.c        ****   while(1) {
+ 154:main.c        **** 	printf( "Task1 cnt=%d\r\n",cnt );
+ 155:main.c        **** 	
+ 156:main.c        **** 	my_nano_sleep(150*NANOS_PER_MS);
+ 157:main.c        **** 	
+ 158:main.c        **** 	  nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function
+ 159:main.c        **** 	cnt++;
+ 160:main.c        **** 	}
+ 161:main.c        **** }
+ 162:main.c        **** 
+ 163:main.c        **** void Task2()
+ 164:main.c        **** {
+ 165:main.c        **** uint16_t cnt;
+ 166:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 167:main.c        ****   printf( "Task2 PID=%d\r\n",nrk_get_pid());
+ 168:main.c        ****   cnt=0;
+ 169:main.c        ****   while(1) {
+ 170:main.c        **** 	  printf( "Task2 cnt=%d\r\n",cnt );
+ 171:main.c        **** 	  my_nano_sleep(10*NANOS_PER_MS);
+ 172:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 173:main.c        **** 	cnt++;
+ 174:main.c        **** 	}
+ 175:main.c        **** }
+ 176:main.c        **** 
+ 177:main.c        **** void Task3()
+ 178:main.c        **** {
+ 179:main.c        **** uint16_t cnt;
+ 180:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 181:main.c        ****   printf( "Task3 PID=%d\r\n",nrk_get_pid());
+ 182:main.c        ****   cnt=0;
+ 183:main.c        ****   while(1) {
+ 184:main.c        **** 	  printf( "Task3 cnt=%d\r\n",cnt );
+ 185:main.c        **** 	  my_nano_sleep(10*NANOS_PER_MS);
+ 186:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 187:main.c        **** 	cnt++;
+ 188:main.c        **** 	}
+ 189:main.c        **** }
+ 190:main.c        **** 
+ 191:main.c        **** void Task4()
+ 192:main.c        **** {
+ 193:main.c        **** uint16_t cnt;
+ 194:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 195:main.c        ****   printf( "Task4 PID=%d\r\n",nrk_get_pid());
+ 196:main.c        ****   cnt=0;
+ 197:main.c        ****   while(1) {
+ 198:main.c        **** 	  printf( "Task4 cnt=%d\r\n",cnt );
+ 199:main.c        **** 	  my_nano_sleep(10*NANOS_PER_MS);
+ 200:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 201:main.c        **** 	cnt++;
+ 202:main.c        **** 	}
+ 203:main.c        **** }
+ 204:main.c        **** 
+ 205:main.c        **** void Task5()
+ 206:main.c        **** {
+ 207:main.c        **** uint16_t cnt;
+ 208:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 209:main.c        ****   printf( "Task5 PID=%d\r\n",nrk_get_pid());
+ 210:main.c        ****   cnt=0;
+ 211:main.c        ****   while(1) {
+ 212:main.c        **** 	  printf( "Task5 cnt=%d\r\n",cnt );
+ 213:main.c        **** 	  my_nano_sleep(10*NANOS_PER_MS);
+ 214:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 215:main.c        **** 	cnt++;
+ 216:main.c        **** 	}
+ 217:main.c        **** }
+ 218:main.c        **** 
+ 219:main.c        **** void Task6()
+ 220:main.c        **** {
+ 221:main.c        **** uint16_t cnt;
+ 222:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 223:main.c        ****   printf( "Task6 PID=%d\r\n",nrk_get_pid());
+ 224:main.c        ****   cnt=0;
+ 225:main.c        ****   while(1) {
+ 226:main.c        **** 	  printf( "Task6 cnt=%d\r\n",cnt );
+ 227:main.c        **** 	  my_nano_sleep(10*NANOS_PER_MS);
+ 228:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 229:main.c        **** 	cnt++;
+ 230:main.c        **** 	}
+ 231:main.c        **** }
+ 232:main.c        **** 
+ 233:main.c        **** void Task7()
+ 234:main.c        **** {
+ 235:main.c        **** uint16_t cnt;
+ 236:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 237:main.c        ****   printf( "Task7 PID=%d\r\n",nrk_get_pid());
+ 238:main.c        ****   cnt=0;
+ 239:main.c        ****   while(1) {
+ 240:main.c        **** 	  printf( "Task7 cnt=%d\r\n",cnt );
+ 241:main.c        **** 	  my_nano_sleep(10*NANOS_PER_MS);
+ 242:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 243:main.c        **** 	cnt++;
+ 244:main.c        **** 	}
+ 245:main.c        **** }
+ 246:main.c        **** 
+ 247:main.c        **** void Task8()
+ 248:main.c        **** {
+ 249:main.c        **** uint16_t cnt;
+ 250:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 251:main.c        ****   printf( "Task8 PID=%d\r\n",nrk_get_pid());
+ 252:main.c        ****   cnt=0;
+ 253:main.c        ****   while(1) {
+ 254:main.c        **** 	  printf( "Task8 cnt=%d\r\n",cnt );
+ 255:main.c        **** 	  my_nano_sleep(10*NANOS_PER_MS);
+ 256:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 257:main.c        **** 	cnt++;
+ 258:main.c        **** 	}
+ 259:main.c        **** }
+ 260:main.c        **** 
+ 261:main.c        **** void Task9()
+ 262:main.c        **** {
+ 263:main.c        **** uint16_t cnt;
+ 264:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 265:main.c        ****   printf( "Task9 PID=%d\r\n",nrk_get_pid());
+ 266:main.c        ****   cnt=0;
+ 267:main.c        ****   while(1) {
+ 268:main.c        **** 	  printf( "Task9 cnt=%d\r\n",cnt );
+ 269:main.c        **** 	  my_nano_sleep(10*NANOS_PER_MS);
+ 270:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 271:main.c        **** 	cnt++;
+ 272:main.c        **** 	}
+ 273:main.c        **** }
+ 274:main.c        **** 
+ 275:main.c        **** void Task10()
+ 276:main.c        **** {
+ 277:main.c        **** uint16_t cnt;
+ 278:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 279:main.c        ****   printf( "Task10 PID=%d\r\n",nrk_get_pid());
+ 280:main.c        ****   cnt=0;
+ 281:main.c        ****   while(1) {
+ 282:main.c        **** 	  printf( "Task10 cnt=%d\r\n",cnt );
+ 283:main.c        **** 	  my_nano_sleep(10*NANOS_PER_MS);
+ 284:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 285:main.c        **** 	cnt++;
+ 286:main.c        **** 	}
+ 287:main.c        **** }
+ 288:main.c        **** 
+ 289:main.c        **** void Task11()
+ 290:main.c        **** {
+ 291:main.c        **** uint16_t cnt;
+ 292:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 293:main.c        ****   printf( "Task11 PID=%d\r\n",nrk_get_pid());
+ 294:main.c        ****   cnt=0;
+ 295:main.c        ****   while(1) {
+ 296:main.c        **** 	  printf( "Task11 cnt=%d\r\n",cnt );
+ 297:main.c        **** 	  my_nano_sleep(10*NANOS_PER_MS);
+ 298:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 299:main.c        **** 	cnt++;
+ 300:main.c        **** 	}
+ 301:main.c        **** }
+ 302:main.c        **** 
+ 303:main.c        **** 
+ 304:main.c        **** void Task12()
+ 305:main.c        **** {
+ 306:main.c        **** uint16_t cnt;
+ 307:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 308:main.c        ****   printf( "Task12 PID=%d\r\n",nrk_get_pid());
+ 309:main.c        ****   cnt=0;
+ 310:main.c        ****   while(1) {
+ 311:main.c        **** 	printf( "Task12 cnt=%d\r\n",cnt );
+ 312:main.c        **** 	_nrk_timer_tick(); //check time of scheduler
+ 313:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 314:main.c        **** 	cnt++;
+ 315:main.c        **** 	}
+ 316:main.c        **** }
+ 317:main.c        **** 
+ 318:main.c        **** void Task13()
+ 319:main.c        **** {
+ 320:main.c        **** uint16_t cnt;
+ 321:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 322:main.c        ****   printf( "Task13 PID=%d\r\n",nrk_get_pid());
+ 323:main.c        ****   cnt=0;
+ 324:main.c        ****   while(1) {
+ 325:main.c        **** 	  printf( "Task13 cnt=%d\r\n",cnt );
+ 326:main.c        **** 	  my_nano_sleep(10*NANOS_PER_MS);
+ 327:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 328:main.c        **** 	cnt++;
+ 329:main.c        **** 	}
+ 330:main.c        **** }
+ 331:main.c        **** 
+ 332:main.c        **** void Task14()
+ 333:main.c        **** {
+ 334:main.c        **** uint16_t cnt;
+ 335:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 336:main.c        ****   printf( "Task14 PID=%d\r\n",nrk_get_pid());
+ 337:main.c        ****   cnt=0;
+ 338:main.c        ****   while(1) {
+ 339:main.c        **** 	  printf( "Task14 cnt=%d\r\n",cnt );
+ 340:main.c        **** 	  my_nano_sleep(10*NANOS_PER_MS);
+ 341:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 342:main.c        **** 	cnt++;
+ 343:main.c        **** 	}
+ 344:main.c        **** }
+ 345:main.c        **** 
+ 346:main.c        **** void Task15()
+ 347:main.c        **** {
+ 348:main.c        **** uint16_t cnt;
+ 349:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 350:main.c        ****   printf( "Task15 PID=%d\r\n",nrk_get_pid());
+ 351:main.c        ****   cnt=0;
+ 352:main.c        ****   while(1) {
+ 353:main.c        **** 	  printf( "Task15 cnt=%d\r\n",cnt );
+ 354:main.c        **** 	  my_nano_sleep(10*NANOS_PER_MS);
+ 355:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 356:main.c        **** 	cnt++;
+ 357:main.c        **** 	}
+ 358:main.c        **** }
+ 359:main.c        **** 
+ 360:main.c        **** void Task16()
+ 361:main.c        **** {
+ 362:main.c        **** uint16_t cnt;
+ 363:main.c        **** //printf( "My node's address is %d\r\n",NODE_ADDR );
+ 364:main.c        ****   printf( "Task16 PID=%d\r\n",nrk_get_pid());
+ 365:main.c        ****   cnt=0;
+ 366:main.c        ****   while(1) {
+ 367:main.c        **** 	  printf( "Task16 cnt=%d\r\n",cnt );
+ 368:main.c        **** 	  my_nano_sleep(10*NANOS_PER_MS);
+ 369:main.c        **** 	nrk_wait_until_next_period(); //TODO:might need to change this to another wait_until... function t
+ 370:main.c        **** 	cnt++;
+ 371:main.c        **** 	}
+ 372:main.c        **** }
+ 373:main.c        **** 
+ 374:main.c        **** void
+ 375:main.c        **** nrk_create_taskset()
+ 376:main.c        **** {	
+ 140               	.LM0:
+ 141               	.LFBB1:
+ 142               	/* prologue: frame size=0 */
+ 143 0000 6F92      		push r6
+ 144 0002 7F92      		push r7
+ 145 0004 8F92      		push r8
+ 146 0006 9F92      		push r9
+ 147 0008 AF92      		push r10
+ 148 000a BF92      		push r11
+ 149 000c CF92      		push r12
+ 150 000e DF92      		push r13
+ 151 0010 EF92      		push r14
+ 152 0012 FF92      		push r15
+ 153 0014 0F93      		push r16
+ 154 0016 1F93      		push r17
+ 155               	/* prologue end (size=12) */
+ 377:main.c        **** 	nrk_task_set_entry_function( &TaskOne, Task1);
+ 157               	.LM1:
+ 158 0018 00E0      		ldi r16,lo8(TaskOne)
+ 159 001a 10E0      		ldi r17,hi8(TaskOne)
+ 160 001c 60E0      		ldi r22,lo8(pm(Task1))
+ 161 001e 70E0      		ldi r23,hi8(pm(Task1))
+ 162 0020 C801      		movw r24,r16
+ 163 0022 0E94 0000 		call nrk_task_set_entry_function
+ 378:main.c        **** 	nrk_task_set_stk( &TaskOne, Stack1, NRK_APP_STACKSIZE);
+ 165               	.LM2:
+ 166 0026 40E8      		ldi r20,lo8(128)
+ 167 0028 50E0      		ldi r21,hi8(128)
+ 168 002a 60E0      		ldi r22,lo8(Stack1)
+ 169 002c 70E0      		ldi r23,hi8(Stack1)
+ 170 002e C801      		movw r24,r16
+ 171 0030 0E94 0000 		call nrk_task_set_stk
+ 379:main.c        **** 	TaskOne.prio = 1;
+ 173               	.LM3:
+ 174 0034 FF24      		clr r15
+ 175 0036 F394      		inc r15
+ 176 0038 F092 0000 		sts TaskOne+8,r15
+ 380:main.c        **** 	TaskOne.FirstActivation = TRUE;
+ 178               	.LM4:
+ 179 003c F092 0000 		sts TaskOne+7,r15
+ 381:main.c        **** 	TaskOne.Type = CBS_TASK;
+ 181               	.LM5:
+ 182 0040 23E0      		ldi r18,lo8(3)
+ 183 0042 E22E      		mov r14,r18
+ 184 0044 E092 0000 		sts TaskOne+10,r14
+ 382:main.c        **** 	TaskOne.SchType = PREEMPTIVE;
+ 186               	.LM6:
+ 187 0048 F092 0000 		sts TaskOne+11,r15
+ 383:main.c        **** 	TaskOne.period.secs = 0;
+ 189               	.LM7:
+ 190 004c 1092 0000 		sts TaskOne+12,__zero_reg__
+ 191 0050 1092 0000 		sts (TaskOne+12)+1,__zero_reg__
+ 192 0054 1092 0000 		sts (TaskOne+12)+2,__zero_reg__
+ 193 0058 1092 0000 		sts (TaskOne+12)+3,__zero_reg__
+ 384:main.c        **** 	TaskOne.period.nano_secs = 1000*NANOS_PER_MS;
+ 195               	.LM8:
+ 196 005c 612C      		mov r6,__zero_reg__
+ 197 005e 9AEC      		ldi r25,hi8(1000000000)
+ 198 0060 792E      		mov r7,r25
+ 199 0062 9AE9      		ldi r25,hlo8(1000000000)
+ 200 0064 892E      		mov r8,r25
+ 201 0066 9BE3      		ldi r25,hhi8(1000000000)
+ 202 0068 992E      		mov r9,r25
+ 203 006a 6092 0000 		sts TaskOne+16,r6
+ 204 006e 7092 0000 		sts (TaskOne+16)+1,r7
+ 205 0072 8092 0000 		sts (TaskOne+16)+2,r8
+ 206 0076 9092 0000 		sts (TaskOne+16)+3,r9
+ 385:main.c        **** 	TaskOne.cpu_reserve.secs = 0;
+ 208               	.LM9:
+ 209 007a 1092 0000 		sts TaskOne+20,__zero_reg__
+ 210 007e 1092 0000 		sts (TaskOne+20)+1,__zero_reg__
+ 211 0082 1092 0000 		sts (TaskOne+20)+2,__zero_reg__
+ 212 0086 1092 0000 		sts (TaskOne+20)+3,__zero_reg__
+ 386:main.c        **** 	TaskOne.cpu_reserve.nano_secs = 100*NANOS_PER_MS;
+ 214               	.LM10:
+ 215 008a A12C      		mov r10,__zero_reg__
+ 216 008c 81EE      		ldi r24,hi8(100000000)
+ 217 008e B82E      		mov r11,r24
+ 218 0090 85EF      		ldi r24,hlo8(100000000)
+ 219 0092 C82E      		mov r12,r24
+ 220 0094 85E0      		ldi r24,hhi8(100000000)
+ 221 0096 D82E      		mov r13,r24
+ 222 0098 A092 0000 		sts TaskOne+24,r10
+ 223 009c B092 0000 		sts (TaskOne+24)+1,r11
+ 224 00a0 C092 0000 		sts (TaskOne+24)+2,r12
+ 225 00a4 D092 0000 		sts (TaskOne+24)+3,r13
+ 387:main.c        **** 	TaskOne.offset.secs = 0;
+ 227               	.LM11:
+ 228 00a8 1092 0000 		sts TaskOne+28,__zero_reg__
+ 229 00ac 1092 0000 		sts (TaskOne+28)+1,__zero_reg__
+ 230 00b0 1092 0000 		sts (TaskOne+28)+2,__zero_reg__
+ 231 00b4 1092 0000 		sts (TaskOne+28)+3,__zero_reg__
+ 388:main.c        **** 	TaskOne.offset.nano_secs= 0;
+ 233               	.LM12:
+ 234 00b8 1092 0000 		sts TaskOne+32,__zero_reg__
+ 235 00bc 1092 0000 		sts (TaskOne+32)+1,__zero_reg__
+ 236 00c0 1092 0000 		sts (TaskOne+32)+2,__zero_reg__
+ 237 00c4 1092 0000 		sts (TaskOne+32)+3,__zero_reg__
+ 389:main.c        **** 	TaskOne.plvl = 1;
+ 239               	.LM13:
+ 240 00c8 F092 0000 		sts TaskOne+9,r15
+ 390:main.c        **** 	nrk_activate_task (&TaskOne);
+ 242               	.LM14:
+ 243 00cc C801      		movw r24,r16
+ 244 00ce 0E94 0000 		call nrk_activate_task
+ 391:main.c        **** 	
+ 392:main.c        **** 	nrk_task_set_entry_function( &TaskTwo, Task2);
+ 246               	.LM15:
+ 247 00d2 00E0      		ldi r16,lo8(TaskTwo)
+ 248 00d4 10E0      		ldi r17,hi8(TaskTwo)
+ 249 00d6 60E0      		ldi r22,lo8(pm(Task2))
+ 250 00d8 70E0      		ldi r23,hi8(pm(Task2))
+ 251 00da C801      		movw r24,r16
+ 252 00dc 0E94 0000 		call nrk_task_set_entry_function
+ 393:main.c        **** 	nrk_task_set_stk( &TaskTwo, Stack2, NRK_APP_STACKSIZE);
+ 254               	.LM16:
+ 255 00e0 40E8      		ldi r20,lo8(128)
+ 256 00e2 50E0      		ldi r21,hi8(128)
+ 257 00e4 60E0      		ldi r22,lo8(Stack2)
+ 258 00e6 70E0      		ldi r23,hi8(Stack2)
+ 259 00e8 C801      		movw r24,r16
+ 260 00ea 0E94 0000 		call nrk_task_set_stk
+ 394:main.c        **** 	TaskTwo.prio = 1;
+ 262               	.LM17:
+ 263 00ee F092 0000 		sts TaskTwo+8,r15
+ 395:main.c        **** 	TaskTwo.FirstActivation = TRUE;
+ 265               	.LM18:
+ 266 00f2 F092 0000 		sts TaskTwo+7,r15
+ 396:main.c        **** 	TaskTwo.Type = CBS_TASK;
+ 268               	.LM19:
+ 269 00f6 E092 0000 		sts TaskTwo+10,r14
+ 397:main.c        **** 	TaskTwo.SchType = PREEMPTIVE;
+ 271               	.LM20:
+ 272 00fa F092 0000 		sts TaskTwo+11,r15
+ 398:main.c        **** 	TaskTwo.period.secs = 0;
+ 274               	.LM21:
+ 275 00fe 1092 0000 		sts TaskTwo+12,__zero_reg__
+ 276 0102 1092 0000 		sts (TaskTwo+12)+1,__zero_reg__
+ 277 0106 1092 0000 		sts (TaskTwo+12)+2,__zero_reg__
+ 278 010a 1092 0000 		sts (TaskTwo+12)+3,__zero_reg__
+ 399:main.c        **** 	TaskTwo.period.nano_secs = 1000*NANOS_PER_MS;
+ 280               	.LM22:
+ 281 010e 6092 0000 		sts TaskTwo+16,r6
+ 282 0112 7092 0000 		sts (TaskTwo+16)+1,r7
+ 283 0116 8092 0000 		sts (TaskTwo+16)+2,r8
+ 284 011a 9092 0000 		sts (TaskTwo+16)+3,r9
+ 400:main.c        **** 	TaskTwo.cpu_reserve.secs = 0;
+ 286               	.LM23:
+ 287 011e 1092 0000 		sts TaskTwo+20,__zero_reg__
+ 288 0122 1092 0000 		sts (TaskTwo+20)+1,__zero_reg__
+ 289 0126 1092 0000 		sts (TaskTwo+20)+2,__zero_reg__
+ 290 012a 1092 0000 		sts (TaskTwo+20)+3,__zero_reg__
+ 401:main.c        **** 	TaskTwo.cpu_reserve.nano_secs = 100*NANOS_PER_MS;
+ 292               	.LM24:
+ 293 012e A092 0000 		sts TaskTwo+24,r10
+ 294 0132 B092 0000 		sts (TaskTwo+24)+1,r11
+ 295 0136 C092 0000 		sts (TaskTwo+24)+2,r12
+ 296 013a D092 0000 		sts (TaskTwo+24)+3,r13
+ 402:main.c        **** 	TaskTwo.offset.secs = 0;
+ 298               	.LM25:
+ 299 013e 1092 0000 		sts TaskTwo+28,__zero_reg__
+ 300 0142 1092 0000 		sts (TaskTwo+28)+1,__zero_reg__
+ 301 0146 1092 0000 		sts (TaskTwo+28)+2,__zero_reg__
+ 302 014a 1092 0000 		sts (TaskTwo+28)+3,__zero_reg__
+ 403:main.c        **** 	TaskTwo.offset.nano_secs= 0;
+ 304               	.LM26:
+ 305 014e 1092 0000 		sts TaskTwo+32,__zero_reg__
+ 306 0152 1092 0000 		sts (TaskTwo+32)+1,__zero_reg__
+ 307 0156 1092 0000 		sts (TaskTwo+32)+2,__zero_reg__
+ 308 015a 1092 0000 		sts (TaskTwo+32)+3,__zero_reg__
+ 404:main.c        **** 	TaskTwo.plvl = 1;
+ 310               	.LM27:
+ 311 015e F092 0000 		sts TaskTwo+9,r15
+ 405:main.c        **** 	nrk_activate_task (&TaskTwo);
+ 313               	.LM28:
+ 314 0162 C801      		movw r24,r16
+ 315 0164 0E94 0000 		call nrk_activate_task
+ 316               	/* epilogue: frame size=0 */
+ 317 0168 1F91      		pop r17
+ 318 016a 0F91      		pop r16
+ 319 016c FF90      		pop r15
+ 320 016e EF90      		pop r14
+ 321 0170 DF90      		pop r13
+ 322 0172 CF90      		pop r12
+ 323 0174 BF90      		pop r11
+ 324 0176 AF90      		pop r10
+ 325 0178 9F90      		pop r9
+ 326 017a 8F90      		pop r8
+ 327 017c 7F90      		pop r7
+ 328 017e 6F90      		pop r6
+ 329 0180 0895      		ret
+ 330               	/* epilogue end (size=13) */
+ 331               	/* function nrk_create_taskset size 193 (168) */
+ 333               	.Lscope1:
+ 335               		.stabd	78,0,0
+ 336               		.data
+ 337               	.LC0:
+ 338 0000 5461 736B 		.string	"Task12 PID=%d\r\n"
+ 338      3132 2050 
+ 338      4944 3D25 
+ 338      640D 0A00 
+ 339               	.LC1:
+ 340 0010 5461 736B 		.string	"Task12 cnt=%d\r\n"
+ 340      3132 2063 
+ 340      6E74 3D25 
+ 340      640D 0A00 
+ 341               		.text
+ 343               	.global	Task12
+ 345               	Task12:
+ 346               		.stabd	46,0,0
+ 348               	.LM29:
+ 349               	.LFBB2:
+ 350               	/* prologue: frame size=0 */
+ 351 0182 0F93      		push r16
+ 352 0184 1F93      		push r17
+ 353 0186 CF93      		push r28
+ 354 0188 DF93      		push r29
+ 355               	/* prologue end (size=4) */
+ 357               	.LM30:
+ 358 018a 0E94 0000 		call nrk_get_pid
+ 359 018e 9927      		clr r25
+ 360 0190 9F93      		push r25
+ 361 0192 8F93      		push r24
+ 362 0194 80E0      		ldi r24,lo8(.LC0)
+ 363 0196 90E0      		ldi r25,hi8(.LC0)
+ 364 0198 9F93      		push r25
+ 365 019a 8F93      		push r24
+ 366 019c 0E94 0000 		call printf
+ 367 01a0 C0E0      		ldi r28,lo8(0)
+ 368 01a2 D0E0      		ldi r29,hi8(0)
+ 369 01a4 0F90      		pop __tmp_reg__
+ 370 01a6 0F90      		pop __tmp_reg__
+ 371 01a8 0F90      		pop __tmp_reg__
+ 372 01aa 0F90      		pop __tmp_reg__
+ 374               	.LM31:
+ 375 01ac 00E0      		ldi r16,lo8(.LC1)
+ 376 01ae 10E0      		ldi r17,hi8(.LC1)
+ 377               	.L4:
+ 379               	.LM32:
+ 380 01b0 DF93      		push r29
+ 381 01b2 CF93      		push r28
+ 382 01b4 1F93      		push r17
+ 383 01b6 0F93      		push r16
+ 384 01b8 0E94 0000 		call printf
+ 386               	.LM33:
+ 387 01bc 0E94 0000 		call _nrk_timer_tick
+ 389               	.LM34:
+ 390 01c0 0E94 0000 		call nrk_wait_until_next_period
+ 392               	.LM35:
+ 393 01c4 2196      		adiw r28,1
+ 395               	.LM36:
+ 396 01c6 0F90      		pop __tmp_reg__
+ 397 01c8 0F90      		pop __tmp_reg__
+ 398 01ca 0F90      		pop __tmp_reg__
+ 399 01cc 0F90      		pop __tmp_reg__
+ 400 01ce 00C0      		rjmp .L4
+ 401               	/* epilogue: frame size=0 */
+ 402               	/* epilogue: noreturn */
+ 403               	/* epilogue end (size=0) */
+ 404               	/* function Task12 size 39 (35) */
+ 409               	.Lscope2:
+ 411               		.stabd	78,0,0
+ 412               		.data
+ 413               	.LC2:
+ 414 0020 5374 6172 		.string	"Starting up...\r"
+ 414      7469 6E67 
+ 414      2075 702E 
+ 414      2E2E 0D00 
+ 415               		.text
+ 417               	.global	main
+ 419               	main:
+ 420               		.stabd	46,0,0
+ 422               	.LM37:
+ 423               	.LFBB3:
+ 424               	/* prologue: frame size=0 */
+ 425 01d0 C0E0      		ldi r28,lo8(__stack - 0)
+ 426 01d2 D0E0      		ldi r29,hi8(__stack - 0)
+ 427 01d4 DEBF      		out __SP_H__,r29
+ 428 01d6 CDBF      		out __SP_L__,r28
+ 429               	/* prologue end (size=4) */
+ 431               	.LM38:
+ 432 01d8 0E94 0000 		call nrk_setup_ports
+ 434               	.LM39:
+ 435 01dc 87E0      		ldi r24,lo8(7)
+ 436 01de 90E0      		ldi r25,hi8(7)
+ 437 01e0 0E94 0000 		call nrk_setup_uart
+ 439               	.LM40:
+ 440 01e4 80E0      		ldi r24,lo8(.LC2)
+ 441 01e6 90E0      		ldi r25,hi8(.LC2)
+ 442 01e8 0E94 0000 		call puts
+ 444               	.LM41:
+ 445 01ec 0E94 0000 		call nrk_init
+ 447               	.LM42:
+ 448 01f0 20E0      		ldi r18,lo8(0)
+ 449 01f2 30E0      		ldi r19,hi8(0)
+ 450 01f4 40E0      		ldi r20,hlo8(0)
+ 451 01f6 50E0      		ldi r21,hhi8(0)
+ 452 01f8 60E0      		ldi r22,lo8(0)
+ 453 01fa 70E0      		ldi r23,hi8(0)
+ 454 01fc 80E0      		ldi r24,hlo8(0)
+ 455 01fe 90E0      		ldi r25,hhi8(0)
+ 456 0200 0E94 0000 		call nrk_time_set
+ 458               	.LM43:
+ 459 0204 0E94 0000 		call nrk_create_taskset
+ 461               	.LM44:
+ 462 0208 0E94 0000 		call nrk_start
+ 464               	.LM45:
+ 465 020c 80E0      		ldi r24,lo8(0)
+ 466 020e 90E0      		ldi r25,hi8(0)
+ 467               	/* epilogue: frame size=0 */
+ 468 0210 0C94 0000 		jmp exit
+ 469               	/* epilogue end (size=2) */
+ 470               	/* function main size 34 (28) */
+ 472               	.Lscope3:
+ 474               		.stabd	78,0,0
+ 475               		.data
+ 476               	.LC3:
+ 477 0030 536C 6565 		.string	"Sleep start (%lu nanos)\r\n"
+ 477      7020 7374 
+ 477      6172 7420 
+ 477      2825 6C75 
+ 477      206E 616E 
+ 478               	.LC4:
+ 479 004a 536C 6565 		.string	"Sleep end\r"
+ 479      7020 656E 
+ 479      640D 00
+ 480               		.text
+ 483               	.global	my_nano_sleep
+ 485               	my_nano_sleep:
+ 486               		.stabd	46,0,0
+ 488               	.LM46:
+ 489               	.LFBB4:
+ 490               	/* prologue: frame size=0 */
+ 491 0214 8F92      		push r8
+ 492 0216 9F92      		push r9
+ 493 0218 AF92      		push r10
+ 494 021a BF92      		push r11
+ 495 021c CF92      		push r12
+ 496 021e DF92      		push r13
+ 497 0220 EF92      		push r14
+ 498 0222 FF92      		push r15
+ 499 0224 0F93      		push r16
+ 500 0226 1F93      		push r17
+ 501 0228 CF93      		push r28
+ 502 022a DF93      		push r29
+ 503               	/* prologue end (size=12) */
+ 504 022c 5B01      		movw r10,r22
+ 505 022e 6C01      		movw r12,r24
+ 507               	.LM47:
+ 508 0230 28EE      		ldi r18,lo8(1000)
+ 509 0232 33E0      		ldi r19,hi8(1000)
+ 510 0234 40E0      		ldi r20,hlo8(1000)
+ 511 0236 50E0      		ldi r21,hhi8(1000)
+ 512 0238 0E94 0000 		call __udivmodsi4
+ 513 023c 7901      		movw r14,r18
+ 514 023e 8A01      		movw r16,r20
+ 516               	.LM48:
+ 517 0240 CA01      		movw r24,r20
+ 518 0242 B901      		movw r22,r18
+ 519 0244 2FEF      		ldi r18,lo8(65535)
+ 520 0246 3FEF      		ldi r19,hi8(65535)
+ 521 0248 40E0      		ldi r20,hlo8(65535)
+ 522 024a 50E0      		ldi r21,hhi8(65535)
+ 523 024c 0E94 0000 		call __udivmodsi4
+ 524 0250 4901      		movw r8,r18
+ 526               	.LM49:
+ 527 0252 C801      		movw r24,r16
+ 528 0254 B701      		movw r22,r14
+ 529 0256 2FEF      		ldi r18,lo8(65535)
+ 530 0258 3FEF      		ldi r19,hi8(65535)
+ 531 025a 40E0      		ldi r20,hlo8(65535)
+ 532 025c 50E0      		ldi r21,hhi8(65535)
+ 533 025e 0E94 0000 		call __udivmodsi4
+ 534 0262 8B01      		movw r16,r22
+ 536               	.LM50:
+ 537 0264 DF92      		push r13
+ 538 0266 CF92      		push r12
+ 539 0268 BF92      		push r11
+ 540 026a AF92      		push r10
+ 541 026c 80E0      		ldi r24,lo8(.LC3)
+ 542 026e 90E0      		ldi r25,hi8(.LC3)
+ 543 0270 9F93      		push r25
+ 544 0272 8F93      		push r24
+ 545 0274 0E94 0000 		call printf
+ 546 0278 C0E0      		ldi r28,lo8(0)
+ 547 027a D0E0      		ldi r29,hi8(0)
+ 549               	.LM51:
+ 550 027c 8DB7      		in r24,__SP_L__
+ 551 027e 9EB7      		in r25,__SP_H__
+ 552 0280 0696      		adiw r24,6
+ 553 0282 0FB6      		in __tmp_reg__,__SREG__
+ 554 0284 F894      		cli
+ 555 0286 9EBF      		out __SP_H__,r25
+ 556 0288 0FBE      		out __SREG__,__tmp_reg__
+ 557 028a 8DBF      		out __SP_L__,r24
+ 558 028c 00C0      		rjmp .L9
+ 559               	.L10:
+ 561               	.LM52:
+ 562 028e 8FEF      		ldi r24,lo8(-1)
+ 563 0290 9FEF      		ldi r25,hi8(-1)
+ 564 0292 0E94 0000 		call nrk_spin_wait_us
+ 566               	.LM53:
+ 567 0296 2196      		adiw r28,1
+ 568               	.L9:
+ 569 0298 C815      		cp r28,r8
+ 570 029a D905      		cpc r29,r9
+ 571 029c 01F4      		brne .L10
+ 573               	.LM54:
+ 574 029e 0115      		cp r16,__zero_reg__
+ 575 02a0 1105      		cpc r17,__zero_reg__
+ 576 02a2 01F0      		breq .L12
+ 578               	.LM55:
+ 579 02a4 C801      		movw r24,r16
+ 580 02a6 0E94 0000 		call nrk_spin_wait_us
+ 581               	.L12:
+ 583               	.LM56:
+ 584 02aa 80E0      		ldi r24,lo8(.LC4)
+ 585 02ac 90E0      		ldi r25,hi8(.LC4)
+ 586 02ae 0E94 0000 		call puts
+ 587               	/* epilogue: frame size=0 */
+ 588 02b2 DF91      		pop r29
+ 589 02b4 CF91      		pop r28
+ 590 02b6 1F91      		pop r17
+ 591 02b8 0F91      		pop r16
+ 592 02ba FF90      		pop r15
+ 593 02bc EF90      		pop r14
+ 594 02be DF90      		pop r13
+ 595 02c0 CF90      		pop r12
+ 596 02c2 BF90      		pop r11
+ 597 02c4 AF90      		pop r10
+ 598 02c6 9F90      		pop r9
+ 599 02c8 8F90      		pop r8
+ 600 02ca 0895      		ret
+ 601               	/* epilogue end (size=13) */
+ 602               	/* function my_nano_sleep size 92 (67) */
+ 609               	.Lscope4:
+ 611               		.stabd	78,0,0
+ 612               		.data
+ 613               	.LC5:
+ 614 0055 5461 736B 		.string	"Task16 PID=%d\r\n"
+ 614      3136 2050 
+ 614      4944 3D25 
+ 614      640D 0A00 
+ 615               	.LC6:
+ 616 0065 5461 736B 		.string	"Task16 cnt=%d\r\n"
+ 616      3136 2063 
+ 616      6E74 3D25 
+ 616      640D 0A00 
+ 617               		.text
+ 619               	.global	Task16
+ 621               	Task16:
+ 622               		.stabd	46,0,0
+ 624               	.LM57:
+ 625               	.LFBB5:
+ 626               	/* prologue: frame size=0 */
+ 627 02cc 0F93      		push r16
+ 628 02ce 1F93      		push r17
+ 629 02d0 CF93      		push r28
+ 630 02d2 DF93      		push r29
+ 631               	/* prologue end (size=4) */
+ 633               	.LM58:
+ 634 02d4 0E94 0000 		call nrk_get_pid
+ 635 02d8 9927      		clr r25
+ 636 02da 9F93      		push r25
+ 637 02dc 8F93      		push r24
+ 638 02de 80E0      		ldi r24,lo8(.LC5)
+ 639 02e0 90E0      		ldi r25,hi8(.LC5)
+ 640 02e2 9F93      		push r25
+ 641 02e4 8F93      		push r24
+ 642 02e6 0E94 0000 		call printf
+ 643 02ea C0E0      		ldi r28,lo8(0)
+ 644 02ec D0E0      		ldi r29,hi8(0)
+ 645 02ee 0F90      		pop __tmp_reg__
+ 646 02f0 0F90      		pop __tmp_reg__
+ 647 02f2 0F90      		pop __tmp_reg__
+ 648 02f4 0F90      		pop __tmp_reg__
+ 650               	.LM59:
+ 651 02f6 00E0      		ldi r16,lo8(.LC6)
+ 652 02f8 10E0      		ldi r17,hi8(.LC6)
+ 653               	.L16:
+ 655               	.LM60:
+ 656 02fa DF93      		push r29
+ 657 02fc CF93      		push r28
+ 658 02fe 1F93      		push r17
+ 659 0300 0F93      		push r16
+ 660 0302 0E94 0000 		call printf
+ 662               	.LM61:
+ 663 0306 60E8      		ldi r22,lo8(10000000)
+ 664 0308 76E9      		ldi r23,hi8(10000000)
+ 665 030a 88E9      		ldi r24,hlo8(10000000)
+ 666 030c 90E0      		ldi r25,hhi8(10000000)
+ 667 030e 0E94 0000 		call my_nano_sleep
+ 669               	.LM62:
+ 670 0312 0E94 0000 		call nrk_wait_until_next_period
+ 672               	.LM63:
+ 673 0316 2196      		adiw r28,1
+ 675               	.LM64:
+ 676 0318 0F90      		pop __tmp_reg__
+ 677 031a 0F90      		pop __tmp_reg__
+ 678 031c 0F90      		pop __tmp_reg__
+ 679 031e 0F90      		pop __tmp_reg__
+ 680 0320 00C0      		rjmp .L16
+ 681               	/* epilogue: frame size=0 */
+ 682               	/* epilogue: noreturn */
+ 683               	/* epilogue end (size=0) */
+ 684               	/* function Task16 size 43 (39) */
+ 689               	.Lscope5:
+ 691               		.stabd	78,0,0
+ 692               		.data
+ 693               	.LC7:
+ 694 0075 5461 736B 		.string	"Task15 PID=%d\r\n"
+ 694      3135 2050 
+ 694      4944 3D25 
+ 694      640D 0A00 
+ 695               	.LC8:
+ 696 0085 5461 736B 		.string	"Task15 cnt=%d\r\n"
+ 696      3135 2063 
+ 696      6E74 3D25 
+ 696      640D 0A00 
+ 697               		.text
+ 699               	.global	Task15
+ 701               	Task15:
+ 702               		.stabd	46,0,0
+ 704               	.LM65:
+ 705               	.LFBB6:
+ 706               	/* prologue: frame size=0 */
+ 707 0322 0F93      		push r16
+ 708 0324 1F93      		push r17
+ 709 0326 CF93      		push r28
+ 710 0328 DF93      		push r29
+ 711               	/* prologue end (size=4) */
+ 713               	.LM66:
+ 714 032a 0E94 0000 		call nrk_get_pid
+ 715 032e 9927      		clr r25
+ 716 0330 9F93      		push r25
+ 717 0332 8F93      		push r24
+ 718 0334 80E0      		ldi r24,lo8(.LC7)
+ 719 0336 90E0      		ldi r25,hi8(.LC7)
+ 720 0338 9F93      		push r25
+ 721 033a 8F93      		push r24
+ 722 033c 0E94 0000 		call printf
+ 723 0340 C0E0      		ldi r28,lo8(0)
+ 724 0342 D0E0      		ldi r29,hi8(0)
+ 725 0344 0F90      		pop __tmp_reg__
+ 726 0346 0F90      		pop __tmp_reg__
+ 727 0348 0F90      		pop __tmp_reg__
+ 728 034a 0F90      		pop __tmp_reg__
+ 730               	.LM67:
+ 731 034c 00E0      		ldi r16,lo8(.LC8)
+ 732 034e 10E0      		ldi r17,hi8(.LC8)
+ 733               	.L19:
+ 735               	.LM68:
+ 736 0350 DF93      		push r29
+ 737 0352 CF93      		push r28
+ 738 0354 1F93      		push r17
+ 739 0356 0F93      		push r16
+ 740 0358 0E94 0000 		call printf
+ 742               	.LM69:
+ 743 035c 60E8      		ldi r22,lo8(10000000)
+ 744 035e 76E9      		ldi r23,hi8(10000000)
+ 745 0360 88E9      		ldi r24,hlo8(10000000)
+ 746 0362 90E0      		ldi r25,hhi8(10000000)
+ 747 0364 0E94 0000 		call my_nano_sleep
+ 749               	.LM70:
+ 750 0368 0E94 0000 		call nrk_wait_until_next_period
+ 752               	.LM71:
+ 753 036c 2196      		adiw r28,1
+ 755               	.LM72:
+ 756 036e 0F90      		pop __tmp_reg__
+ 757 0370 0F90      		pop __tmp_reg__
+ 758 0372 0F90      		pop __tmp_reg__
+ 759 0374 0F90      		pop __tmp_reg__
+ 760 0376 00C0      		rjmp .L19
+ 761               	/* epilogue: frame size=0 */
+ 762               	/* epilogue: noreturn */
+ 763               	/* epilogue end (size=0) */
+ 764               	/* function Task15 size 43 (39) */
+ 769               	.Lscope6:
+ 771               		.stabd	78,0,0
+ 772               		.data
+ 773               	.LC9:
+ 774 0095 5461 736B 		.string	"Task14 PID=%d\r\n"
+ 774      3134 2050 
+ 774      4944 3D25 
+ 774      640D 0A00 
+ 775               	.LC10:
+ 776 00a5 5461 736B 		.string	"Task14 cnt=%d\r\n"
+ 776      3134 2063 
+ 776      6E74 3D25 
+ 776      640D 0A00 
+ 777               		.text
+ 779               	.global	Task14
+ 781               	Task14:
+ 782               		.stabd	46,0,0
+ 784               	.LM73:
+ 785               	.LFBB7:
+ 786               	/* prologue: frame size=0 */
+ 787 0378 0F93      		push r16
+ 788 037a 1F93      		push r17
+ 789 037c CF93      		push r28
+ 790 037e DF93      		push r29
+ 791               	/* prologue end (size=4) */
+ 793               	.LM74:
+ 794 0380 0E94 0000 		call nrk_get_pid
+ 795 0384 9927      		clr r25
+ 796 0386 9F93      		push r25
+ 797 0388 8F93      		push r24
+ 798 038a 80E0      		ldi r24,lo8(.LC9)
+ 799 038c 90E0      		ldi r25,hi8(.LC9)
+ 800 038e 9F93      		push r25
+ 801 0390 8F93      		push r24
+ 802 0392 0E94 0000 		call printf
+ 803 0396 C0E0      		ldi r28,lo8(0)
+ 804 0398 D0E0      		ldi r29,hi8(0)
+ 805 039a 0F90      		pop __tmp_reg__
+ 806 039c 0F90      		pop __tmp_reg__
+ 807 039e 0F90      		pop __tmp_reg__
+ 808 03a0 0F90      		pop __tmp_reg__
+ 810               	.LM75:
+ 811 03a2 00E0      		ldi r16,lo8(.LC10)
+ 812 03a4 10E0      		ldi r17,hi8(.LC10)
+ 813               	.L22:
+ 815               	.LM76:
+ 816 03a6 DF93      		push r29
+ 817 03a8 CF93      		push r28
+ 818 03aa 1F93      		push r17
+ 819 03ac 0F93      		push r16
+ 820 03ae 0E94 0000 		call printf
+ 822               	.LM77:
+ 823 03b2 60E8      		ldi r22,lo8(10000000)
+ 824 03b4 76E9      		ldi r23,hi8(10000000)
+ 825 03b6 88E9      		ldi r24,hlo8(10000000)
+ 826 03b8 90E0      		ldi r25,hhi8(10000000)
+ 827 03ba 0E94 0000 		call my_nano_sleep
+ 829               	.LM78:
+ 830 03be 0E94 0000 		call nrk_wait_until_next_period
+ 832               	.LM79:
+ 833 03c2 2196      		adiw r28,1
+ 835               	.LM80:
+ 836 03c4 0F90      		pop __tmp_reg__
+ 837 03c6 0F90      		pop __tmp_reg__
+ 838 03c8 0F90      		pop __tmp_reg__
+ 839 03ca 0F90      		pop __tmp_reg__
+ 840 03cc 00C0      		rjmp .L22
+ 841               	/* epilogue: frame size=0 */
+ 842               	/* epilogue: noreturn */
+ 843               	/* epilogue end (size=0) */
+ 844               	/* function Task14 size 43 (39) */
+ 849               	.Lscope7:
+ 851               		.stabd	78,0,0
+ 852               		.data
+ 853               	.LC11:
+ 854 00b5 5461 736B 		.string	"Task13 PID=%d\r\n"
+ 854      3133 2050 
+ 854      4944 3D25 
+ 854      640D 0A00 
+ 855               	.LC12:
+ 856 00c5 5461 736B 		.string	"Task13 cnt=%d\r\n"
+ 856      3133 2063 
+ 856      6E74 3D25 
+ 856      640D 0A00 
+ 857               		.text
+ 859               	.global	Task13
+ 861               	Task13:
+ 862               		.stabd	46,0,0
+ 864               	.LM81:
+ 865               	.LFBB8:
+ 866               	/* prologue: frame size=0 */
+ 867 03ce 0F93      		push r16
+ 868 03d0 1F93      		push r17
+ 869 03d2 CF93      		push r28
+ 870 03d4 DF93      		push r29
+ 871               	/* prologue end (size=4) */
+ 873               	.LM82:
+ 874 03d6 0E94 0000 		call nrk_get_pid
+ 875 03da 9927      		clr r25
+ 876 03dc 9F93      		push r25
+ 877 03de 8F93      		push r24
+ 878 03e0 80E0      		ldi r24,lo8(.LC11)
+ 879 03e2 90E0      		ldi r25,hi8(.LC11)
+ 880 03e4 9F93      		push r25
+ 881 03e6 8F93      		push r24
+ 882 03e8 0E94 0000 		call printf
+ 883 03ec C0E0      		ldi r28,lo8(0)
+ 884 03ee D0E0      		ldi r29,hi8(0)
+ 885 03f0 0F90      		pop __tmp_reg__
+ 886 03f2 0F90      		pop __tmp_reg__
+ 887 03f4 0F90      		pop __tmp_reg__
+ 888 03f6 0F90      		pop __tmp_reg__
+ 890               	.LM83:
+ 891 03f8 00E0      		ldi r16,lo8(.LC12)
+ 892 03fa 10E0      		ldi r17,hi8(.LC12)
+ 893               	.L25:
+ 895               	.LM84:
+ 896 03fc DF93      		push r29
+ 897 03fe CF93      		push r28
+ 898 0400 1F93      		push r17
+ 899 0402 0F93      		push r16
+ 900 0404 0E94 0000 		call printf
+ 902               	.LM85:
+ 903 0408 60E8      		ldi r22,lo8(10000000)
+ 904 040a 76E9      		ldi r23,hi8(10000000)
+ 905 040c 88E9      		ldi r24,hlo8(10000000)
+ 906 040e 90E0      		ldi r25,hhi8(10000000)
+ 907 0410 0E94 0000 		call my_nano_sleep
+ 909               	.LM86:
+ 910 0414 0E94 0000 		call nrk_wait_until_next_period
+ 912               	.LM87:
+ 913 0418 2196      		adiw r28,1
+ 915               	.LM88:
+ 916 041a 0F90      		pop __tmp_reg__
+ 917 041c 0F90      		pop __tmp_reg__
+ 918 041e 0F90      		pop __tmp_reg__
+ 919 0420 0F90      		pop __tmp_reg__
+ 920 0422 00C0      		rjmp .L25
+ 921               	/* epilogue: frame size=0 */
+ 922               	/* epilogue: noreturn */
+ 923               	/* epilogue end (size=0) */
+ 924               	/* function Task13 size 43 (39) */
+ 929               	.Lscope8:
+ 931               		.stabd	78,0,0
+ 932               		.data
+ 933               	.LC13:
+ 934 00d5 5461 736B 		.string	"Task11 PID=%d\r\n"
+ 934      3131 2050 
+ 934      4944 3D25 
+ 934      640D 0A00 
+ 935               	.LC14:
+ 936 00e5 5461 736B 		.string	"Task11 cnt=%d\r\n"
+ 936      3131 2063 
+ 936      6E74 3D25 
+ 936      640D 0A00 
+ 937               		.text
+ 939               	.global	Task11
+ 941               	Task11:
+ 942               		.stabd	46,0,0
+ 944               	.LM89:
+ 945               	.LFBB9:
+ 946               	/* prologue: frame size=0 */
+ 947 0424 0F93      		push r16
+ 948 0426 1F93      		push r17
+ 949 0428 CF93      		push r28
+ 950 042a DF93      		push r29
+ 951               	/* prologue end (size=4) */
+ 953               	.LM90:
+ 954 042c 0E94 0000 		call nrk_get_pid
+ 955 0430 9927      		clr r25
+ 956 0432 9F93      		push r25
+ 957 0434 8F93      		push r24
+ 958 0436 80E0      		ldi r24,lo8(.LC13)
+ 959 0438 90E0      		ldi r25,hi8(.LC13)
+ 960 043a 9F93      		push r25
+ 961 043c 8F93      		push r24
+ 962 043e 0E94 0000 		call printf
+ 963 0442 C0E0      		ldi r28,lo8(0)
+ 964 0444 D0E0      		ldi r29,hi8(0)
+ 965 0446 0F90      		pop __tmp_reg__
+ 966 0448 0F90      		pop __tmp_reg__
+ 967 044a 0F90      		pop __tmp_reg__
+ 968 044c 0F90      		pop __tmp_reg__
+ 970               	.LM91:
+ 971 044e 00E0      		ldi r16,lo8(.LC14)
+ 972 0450 10E0      		ldi r17,hi8(.LC14)
+ 973               	.L28:
+ 975               	.LM92:
+ 976 0452 DF93      		push r29
+ 977 0454 CF93      		push r28
+ 978 0456 1F93      		push r17
+ 979 0458 0F93      		push r16
+ 980 045a 0E94 0000 		call printf
+ 982               	.LM93:
+ 983 045e 60E8      		ldi r22,lo8(10000000)
+ 984 0460 76E9      		ldi r23,hi8(10000000)
+ 985 0462 88E9      		ldi r24,hlo8(10000000)
+ 986 0464 90E0      		ldi r25,hhi8(10000000)
+ 987 0466 0E94 0000 		call my_nano_sleep
+ 989               	.LM94:
+ 990 046a 0E94 0000 		call nrk_wait_until_next_period
+ 992               	.LM95:
+ 993 046e 2196      		adiw r28,1
+ 995               	.LM96:
+ 996 0470 0F90      		pop __tmp_reg__
+ 997 0472 0F90      		pop __tmp_reg__
+ 998 0474 0F90      		pop __tmp_reg__
+ 999 0476 0F90      		pop __tmp_reg__
+ 1000 0478 00C0      		rjmp .L28
+ 1001               	/* epilogue: frame size=0 */
+ 1002               	/* epilogue: noreturn */
+ 1003               	/* epilogue end (size=0) */
+ 1004               	/* function Task11 size 43 (39) */
+ 1009               	.Lscope9:
+ 1011               		.stabd	78,0,0
+ 1012               		.data
+ 1013               	.LC15:
+ 1014 00f5 5461 736B 		.string	"Task10 PID=%d\r\n"
+ 1014      3130 2050 
+ 1014      4944 3D25 
+ 1014      640D 0A00 
+ 1015               	.LC16:
+ 1016 0105 5461 736B 		.string	"Task10 cnt=%d\r\n"
+ 1016      3130 2063 
+ 1016      6E74 3D25 
+ 1016      640D 0A00 
+ 1017               		.text
+ 1019               	.global	Task10
+ 1021               	Task10:
+ 1022               		.stabd	46,0,0
+ 1024               	.LM97:
+ 1025               	.LFBB10:
+ 1026               	/* prologue: frame size=0 */
+ 1027 047a 0F93      		push r16
+ 1028 047c 1F93      		push r17
+ 1029 047e CF93      		push r28
+ 1030 0480 DF93      		push r29
+ 1031               	/* prologue end (size=4) */
+ 1033               	.LM98:
+ 1034 0482 0E94 0000 		call nrk_get_pid
+ 1035 0486 9927      		clr r25
+ 1036 0488 9F93      		push r25
+ 1037 048a 8F93      		push r24
+ 1038 048c 80E0      		ldi r24,lo8(.LC15)
+ 1039 048e 90E0      		ldi r25,hi8(.LC15)
+ 1040 0490 9F93      		push r25
+ 1041 0492 8F93      		push r24
+ 1042 0494 0E94 0000 		call printf
+ 1043 0498 C0E0      		ldi r28,lo8(0)
+ 1044 049a D0E0      		ldi r29,hi8(0)
+ 1045 049c 0F90      		pop __tmp_reg__
+ 1046 049e 0F90      		pop __tmp_reg__
+ 1047 04a0 0F90      		pop __tmp_reg__
+ 1048 04a2 0F90      		pop __tmp_reg__
+ 1050               	.LM99:
+ 1051 04a4 00E0      		ldi r16,lo8(.LC16)
+ 1052 04a6 10E0      		ldi r17,hi8(.LC16)
+ 1053               	.L31:
+ 1055               	.LM100:
+ 1056 04a8 DF93      		push r29
+ 1057 04aa CF93      		push r28
+ 1058 04ac 1F93      		push r17
+ 1059 04ae 0F93      		push r16
+ 1060 04b0 0E94 0000 		call printf
+ 1062               	.LM101:
+ 1063 04b4 60E8      		ldi r22,lo8(10000000)
+ 1064 04b6 76E9      		ldi r23,hi8(10000000)
+ 1065 04b8 88E9      		ldi r24,hlo8(10000000)
+ 1066 04ba 90E0      		ldi r25,hhi8(10000000)
+ 1067 04bc 0E94 0000 		call my_nano_sleep
+ 1069               	.LM102:
+ 1070 04c0 0E94 0000 		call nrk_wait_until_next_period
+ 1072               	.LM103:
+ 1073 04c4 2196      		adiw r28,1
+ 1075               	.LM104:
+ 1076 04c6 0F90      		pop __tmp_reg__
+ 1077 04c8 0F90      		pop __tmp_reg__
+ 1078 04ca 0F90      		pop __tmp_reg__
+ 1079 04cc 0F90      		pop __tmp_reg__
+ 1080 04ce 00C0      		rjmp .L31
+ 1081               	/* epilogue: frame size=0 */
+ 1082               	/* epilogue: noreturn */
+ 1083               	/* epilogue end (size=0) */
+ 1084               	/* function Task10 size 43 (39) */
+ 1089               	.Lscope10:
+ 1091               		.stabd	78,0,0
+ 1092               		.data
+ 1093               	.LC17:
+ 1094 0115 5461 736B 		.string	"Task9 PID=%d\r\n"
+ 1094      3920 5049 
+ 1094      443D 2564 
+ 1094      0D0A 00
+ 1095               	.LC18:
+ 1096 0124 5461 736B 		.string	"Task9 cnt=%d\r\n"
+ 1096      3920 636E 
+ 1096      743D 2564 
+ 1096      0D0A 00
+ 1097               		.text
+ 1099               	.global	Task9
+ 1101               	Task9:
+ 1102               		.stabd	46,0,0
+ 1104               	.LM105:
+ 1105               	.LFBB11:
+ 1106               	/* prologue: frame size=0 */
+ 1107 04d0 0F93      		push r16
+ 1108 04d2 1F93      		push r17
+ 1109 04d4 CF93      		push r28
+ 1110 04d6 DF93      		push r29
+ 1111               	/* prologue end (size=4) */
+ 1113               	.LM106:
+ 1114 04d8 0E94 0000 		call nrk_get_pid
+ 1115 04dc 9927      		clr r25
+ 1116 04de 9F93      		push r25
+ 1117 04e0 8F93      		push r24
+ 1118 04e2 80E0      		ldi r24,lo8(.LC17)
+ 1119 04e4 90E0      		ldi r25,hi8(.LC17)
+ 1120 04e6 9F93      		push r25
+ 1121 04e8 8F93      		push r24
+ 1122 04ea 0E94 0000 		call printf
+ 1123 04ee C0E0      		ldi r28,lo8(0)
+ 1124 04f0 D0E0      		ldi r29,hi8(0)
+ 1125 04f2 0F90      		pop __tmp_reg__
+ 1126 04f4 0F90      		pop __tmp_reg__
+ 1127 04f6 0F90      		pop __tmp_reg__
+ 1128 04f8 0F90      		pop __tmp_reg__
+ 1130               	.LM107:
+ 1131 04fa 00E0      		ldi r16,lo8(.LC18)
+ 1132 04fc 10E0      		ldi r17,hi8(.LC18)
+ 1133               	.L34:
+ 1135               	.LM108:
+ 1136 04fe DF93      		push r29
+ 1137 0500 CF93      		push r28
+ 1138 0502 1F93      		push r17
+ 1139 0504 0F93      		push r16
+ 1140 0506 0E94 0000 		call printf
+ 1142               	.LM109:
+ 1143 050a 60E8      		ldi r22,lo8(10000000)
+ 1144 050c 76E9      		ldi r23,hi8(10000000)
+ 1145 050e 88E9      		ldi r24,hlo8(10000000)
+ 1146 0510 90E0      		ldi r25,hhi8(10000000)
+ 1147 0512 0E94 0000 		call my_nano_sleep
+ 1149               	.LM110:
+ 1150 0516 0E94 0000 		call nrk_wait_until_next_period
+ 1152               	.LM111:
+ 1153 051a 2196      		adiw r28,1
+ 1155               	.LM112:
+ 1156 051c 0F90      		pop __tmp_reg__
+ 1157 051e 0F90      		pop __tmp_reg__
+ 1158 0520 0F90      		pop __tmp_reg__
+ 1159 0522 0F90      		pop __tmp_reg__
+ 1160 0524 00C0      		rjmp .L34
+ 1161               	/* epilogue: frame size=0 */
+ 1162               	/* epilogue: noreturn */
+ 1163               	/* epilogue end (size=0) */
+ 1164               	/* function Task9 size 43 (39) */
+ 1169               	.Lscope11:
+ 1171               		.stabd	78,0,0
+ 1172               		.data
+ 1173               	.LC19:
+ 1174 0133 5461 736B 		.string	"Task8 PID=%d\r\n"
+ 1174      3820 5049 
+ 1174      443D 2564 
+ 1174      0D0A 00
+ 1175               	.LC20:
+ 1176 0142 5461 736B 		.string	"Task8 cnt=%d\r\n"
+ 1176      3820 636E 
+ 1176      743D 2564 
+ 1176      0D0A 00
+ 1177               		.text
+ 1179               	.global	Task8
+ 1181               	Task8:
+ 1182               		.stabd	46,0,0
+ 1184               	.LM113:
+ 1185               	.LFBB12:
+ 1186               	/* prologue: frame size=0 */
+ 1187 0526 0F93      		push r16
+ 1188 0528 1F93      		push r17
+ 1189 052a CF93      		push r28
+ 1190 052c DF93      		push r29
+ 1191               	/* prologue end (size=4) */
+ 1193               	.LM114:
+ 1194 052e 0E94 0000 		call nrk_get_pid
+ 1195 0532 9927      		clr r25
+ 1196 0534 9F93      		push r25
+ 1197 0536 8F93      		push r24
+ 1198 0538 80E0      		ldi r24,lo8(.LC19)
+ 1199 053a 90E0      		ldi r25,hi8(.LC19)
+ 1200 053c 9F93      		push r25
+ 1201 053e 8F93      		push r24
+ 1202 0540 0E94 0000 		call printf
+ 1203 0544 C0E0      		ldi r28,lo8(0)
+ 1204 0546 D0E0      		ldi r29,hi8(0)
+ 1205 0548 0F90      		pop __tmp_reg__
+ 1206 054a 0F90      		pop __tmp_reg__
+ 1207 054c 0F90      		pop __tmp_reg__
+ 1208 054e 0F90      		pop __tmp_reg__
+ 1210               	.LM115:
+ 1211 0550 00E0      		ldi r16,lo8(.LC20)
+ 1212 0552 10E0      		ldi r17,hi8(.LC20)
+ 1213               	.L37:
+ 1215               	.LM116:
+ 1216 0554 DF93      		push r29
+ 1217 0556 CF93      		push r28
+ 1218 0558 1F93      		push r17
+ 1219 055a 0F93      		push r16
+ 1220 055c 0E94 0000 		call printf
+ 1222               	.LM117:
+ 1223 0560 60E8      		ldi r22,lo8(10000000)
+ 1224 0562 76E9      		ldi r23,hi8(10000000)
+ 1225 0564 88E9      		ldi r24,hlo8(10000000)
+ 1226 0566 90E0      		ldi r25,hhi8(10000000)
+ 1227 0568 0E94 0000 		call my_nano_sleep
+ 1229               	.LM118:
+ 1230 056c 0E94 0000 		call nrk_wait_until_next_period
+ 1232               	.LM119:
+ 1233 0570 2196      		adiw r28,1
+ 1235               	.LM120:
+ 1236 0572 0F90      		pop __tmp_reg__
+ 1237 0574 0F90      		pop __tmp_reg__
+ 1238 0576 0F90      		pop __tmp_reg__
+ 1239 0578 0F90      		pop __tmp_reg__
+ 1240 057a 00C0      		rjmp .L37
+ 1241               	/* epilogue: frame size=0 */
+ 1242               	/* epilogue: noreturn */
+ 1243               	/* epilogue end (size=0) */
+ 1244               	/* function Task8 size 43 (39) */
+ 1249               	.Lscope12:
+ 1251               		.stabd	78,0,0
+ 1252               		.data
+ 1253               	.LC21:
+ 1254 0151 5461 736B 		.string	"Task7 PID=%d\r\n"
+ 1254      3720 5049 
+ 1254      443D 2564 
+ 1254      0D0A 00
+ 1255               	.LC22:
+ 1256 0160 5461 736B 		.string	"Task7 cnt=%d\r\n"
+ 1256      3720 636E 
+ 1256      743D 2564 
+ 1256      0D0A 00
+ 1257               		.text
+ 1259               	.global	Task7
+ 1261               	Task7:
+ 1262               		.stabd	46,0,0
+ 1264               	.LM121:
+ 1265               	.LFBB13:
+ 1266               	/* prologue: frame size=0 */
+ 1267 057c 0F93      		push r16
+ 1268 057e 1F93      		push r17
+ 1269 0580 CF93      		push r28
+ 1270 0582 DF93      		push r29
+ 1271               	/* prologue end (size=4) */
+ 1273               	.LM122:
+ 1274 0584 0E94 0000 		call nrk_get_pid
+ 1275 0588 9927      		clr r25
+ 1276 058a 9F93      		push r25
+ 1277 058c 8F93      		push r24
+ 1278 058e 80E0      		ldi r24,lo8(.LC21)
+ 1279 0590 90E0      		ldi r25,hi8(.LC21)
+ 1280 0592 9F93      		push r25
+ 1281 0594 8F93      		push r24
+ 1282 0596 0E94 0000 		call printf
+ 1283 059a C0E0      		ldi r28,lo8(0)
+ 1284 059c D0E0      		ldi r29,hi8(0)
+ 1285 059e 0F90      		pop __tmp_reg__
+ 1286 05a0 0F90      		pop __tmp_reg__
+ 1287 05a2 0F90      		pop __tmp_reg__
+ 1288 05a4 0F90      		pop __tmp_reg__
+ 1290               	.LM123:
+ 1291 05a6 00E0      		ldi r16,lo8(.LC22)
+ 1292 05a8 10E0      		ldi r17,hi8(.LC22)
+ 1293               	.L40:
+ 1295               	.LM124:
+ 1296 05aa DF93      		push r29
+ 1297 05ac CF93      		push r28
+ 1298 05ae 1F93      		push r17
+ 1299 05b0 0F93      		push r16
+ 1300 05b2 0E94 0000 		call printf
+ 1302               	.LM125:
+ 1303 05b6 60E8      		ldi r22,lo8(10000000)
+ 1304 05b8 76E9      		ldi r23,hi8(10000000)
+ 1305 05ba 88E9      		ldi r24,hlo8(10000000)
+ 1306 05bc 90E0      		ldi r25,hhi8(10000000)
+ 1307 05be 0E94 0000 		call my_nano_sleep
+ 1309               	.LM126:
+ 1310 05c2 0E94 0000 		call nrk_wait_until_next_period
+ 1312               	.LM127:
+ 1313 05c6 2196      		adiw r28,1
+ 1315               	.LM128:
+ 1316 05c8 0F90      		pop __tmp_reg__
+ 1317 05ca 0F90      		pop __tmp_reg__
+ 1318 05cc 0F90      		pop __tmp_reg__
+ 1319 05ce 0F90      		pop __tmp_reg__
+ 1320 05d0 00C0      		rjmp .L40
+ 1321               	/* epilogue: frame size=0 */
+ 1322               	/* epilogue: noreturn */
+ 1323               	/* epilogue end (size=0) */
+ 1324               	/* function Task7 size 43 (39) */
+ 1329               	.Lscope13:
+ 1331               		.stabd	78,0,0
+ 1332               		.data
+ 1333               	.LC23:
+ 1334 016f 5461 736B 		.string	"Task6 PID=%d\r\n"
+ 1334      3620 5049 
+ 1334      443D 2564 
+ 1334      0D0A 00
+ 1335               	.LC24:
+ 1336 017e 5461 736B 		.string	"Task6 cnt=%d\r\n"
+ 1336      3620 636E 
+ 1336      743D 2564 
+ 1336      0D0A 00
+ 1337               		.text
+ 1339               	.global	Task6
+ 1341               	Task6:
+ 1342               		.stabd	46,0,0
+ 1344               	.LM129:
+ 1345               	.LFBB14:
+ 1346               	/* prologue: frame size=0 */
+ 1347 05d2 0F93      		push r16
+ 1348 05d4 1F93      		push r17
+ 1349 05d6 CF93      		push r28
+ 1350 05d8 DF93      		push r29
+ 1351               	/* prologue end (size=4) */
+ 1353               	.LM130:
+ 1354 05da 0E94 0000 		call nrk_get_pid
+ 1355 05de 9927      		clr r25
+ 1356 05e0 9F93      		push r25
+ 1357 05e2 8F93      		push r24
+ 1358 05e4 80E0      		ldi r24,lo8(.LC23)
+ 1359 05e6 90E0      		ldi r25,hi8(.LC23)
+ 1360 05e8 9F93      		push r25
+ 1361 05ea 8F93      		push r24
+ 1362 05ec 0E94 0000 		call printf
+ 1363 05f0 C0E0      		ldi r28,lo8(0)
+ 1364 05f2 D0E0      		ldi r29,hi8(0)
+ 1365 05f4 0F90      		pop __tmp_reg__
+ 1366 05f6 0F90      		pop __tmp_reg__
+ 1367 05f8 0F90      		pop __tmp_reg__
+ 1368 05fa 0F90      		pop __tmp_reg__
+ 1370               	.LM131:
+ 1371 05fc 00E0      		ldi r16,lo8(.LC24)
+ 1372 05fe 10E0      		ldi r17,hi8(.LC24)
+ 1373               	.L43:
+ 1375               	.LM132:
+ 1376 0600 DF93      		push r29
+ 1377 0602 CF93      		push r28
+ 1378 0604 1F93      		push r17
+ 1379 0606 0F93      		push r16
+ 1380 0608 0E94 0000 		call printf
+ 1382               	.LM133:
+ 1383 060c 60E8      		ldi r22,lo8(10000000)
+ 1384 060e 76E9      		ldi r23,hi8(10000000)
+ 1385 0610 88E9      		ldi r24,hlo8(10000000)
+ 1386 0612 90E0      		ldi r25,hhi8(10000000)
+ 1387 0614 0E94 0000 		call my_nano_sleep
+ 1389               	.LM134:
+ 1390 0618 0E94 0000 		call nrk_wait_until_next_period
+ 1392               	.LM135:
+ 1393 061c 2196      		adiw r28,1
+ 1395               	.LM136:
+ 1396 061e 0F90      		pop __tmp_reg__
+ 1397 0620 0F90      		pop __tmp_reg__
+ 1398 0622 0F90      		pop __tmp_reg__
+ 1399 0624 0F90      		pop __tmp_reg__
+ 1400 0626 00C0      		rjmp .L43
+ 1401               	/* epilogue: frame size=0 */
+ 1402               	/* epilogue: noreturn */
+ 1403               	/* epilogue end (size=0) */
+ 1404               	/* function Task6 size 43 (39) */
+ 1409               	.Lscope14:
+ 1411               		.stabd	78,0,0
+ 1412               		.data
+ 1413               	.LC25:
+ 1414 018d 5461 736B 		.string	"Task5 PID=%d\r\n"
+ 1414      3520 5049 
+ 1414      443D 2564 
+ 1414      0D0A 00
+ 1415               	.LC26:
+ 1416 019c 5461 736B 		.string	"Task5 cnt=%d\r\n"
+ 1416      3520 636E 
+ 1416      743D 2564 
+ 1416      0D0A 00
+ 1417               		.text
+ 1419               	.global	Task5
+ 1421               	Task5:
+ 1422               		.stabd	46,0,0
+ 1424               	.LM137:
+ 1425               	.LFBB15:
+ 1426               	/* prologue: frame size=0 */
+ 1427 0628 0F93      		push r16
+ 1428 062a 1F93      		push r17
+ 1429 062c CF93      		push r28
+ 1430 062e DF93      		push r29
+ 1431               	/* prologue end (size=4) */
+ 1433               	.LM138:
+ 1434 0630 0E94 0000 		call nrk_get_pid
+ 1435 0634 9927      		clr r25
+ 1436 0636 9F93      		push r25
+ 1437 0638 8F93      		push r24
+ 1438 063a 80E0      		ldi r24,lo8(.LC25)
+ 1439 063c 90E0      		ldi r25,hi8(.LC25)
+ 1440 063e 9F93      		push r25
+ 1441 0640 8F93      		push r24
+ 1442 0642 0E94 0000 		call printf
+ 1443 0646 C0E0      		ldi r28,lo8(0)
+ 1444 0648 D0E0      		ldi r29,hi8(0)
+ 1445 064a 0F90      		pop __tmp_reg__
+ 1446 064c 0F90      		pop __tmp_reg__
+ 1447 064e 0F90      		pop __tmp_reg__
+ 1448 0650 0F90      		pop __tmp_reg__
+ 1450               	.LM139:
+ 1451 0652 00E0      		ldi r16,lo8(.LC26)
+ 1452 0654 10E0      		ldi r17,hi8(.LC26)
+ 1453               	.L46:
+ 1455               	.LM140:
+ 1456 0656 DF93      		push r29
+ 1457 0658 CF93      		push r28
+ 1458 065a 1F93      		push r17
+ 1459 065c 0F93      		push r16
+ 1460 065e 0E94 0000 		call printf
+ 1462               	.LM141:
+ 1463 0662 60E8      		ldi r22,lo8(10000000)
+ 1464 0664 76E9      		ldi r23,hi8(10000000)
+ 1465 0666 88E9      		ldi r24,hlo8(10000000)
+ 1466 0668 90E0      		ldi r25,hhi8(10000000)
+ 1467 066a 0E94 0000 		call my_nano_sleep
+ 1469               	.LM142:
+ 1470 066e 0E94 0000 		call nrk_wait_until_next_period
+ 1472               	.LM143:
+ 1473 0672 2196      		adiw r28,1
+ 1475               	.LM144:
+ 1476 0674 0F90      		pop __tmp_reg__
+ 1477 0676 0F90      		pop __tmp_reg__
+ 1478 0678 0F90      		pop __tmp_reg__
+ 1479 067a 0F90      		pop __tmp_reg__
+ 1480 067c 00C0      		rjmp .L46
+ 1481               	/* epilogue: frame size=0 */
+ 1482               	/* epilogue: noreturn */
+ 1483               	/* epilogue end (size=0) */
+ 1484               	/* function Task5 size 43 (39) */
+ 1489               	.Lscope15:
+ 1491               		.stabd	78,0,0
+ 1492               		.data
+ 1493               	.LC27:
+ 1494 01ab 5461 736B 		.string	"Task4 PID=%d\r\n"
+ 1494      3420 5049 
+ 1494      443D 2564 
+ 1494      0D0A 00
+ 1495               	.LC28:
+ 1496 01ba 5461 736B 		.string	"Task4 cnt=%d\r\n"
+ 1496      3420 636E 
+ 1496      743D 2564 
+ 1496      0D0A 00
+ 1497               		.text
+ 1499               	.global	Task4
+ 1501               	Task4:
+ 1502               		.stabd	46,0,0
+ 1504               	.LM145:
+ 1505               	.LFBB16:
+ 1506               	/* prologue: frame size=0 */
+ 1507 067e 0F93      		push r16
+ 1508 0680 1F93      		push r17
+ 1509 0682 CF93      		push r28
+ 1510 0684 DF93      		push r29
+ 1511               	/* prologue end (size=4) */
+ 1513               	.LM146:
+ 1514 0686 0E94 0000 		call nrk_get_pid
+ 1515 068a 9927      		clr r25
+ 1516 068c 9F93      		push r25
+ 1517 068e 8F93      		push r24
+ 1518 0690 80E0      		ldi r24,lo8(.LC27)
+ 1519 0692 90E0      		ldi r25,hi8(.LC27)
+ 1520 0694 9F93      		push r25
+ 1521 0696 8F93      		push r24
+ 1522 0698 0E94 0000 		call printf
+ 1523 069c C0E0      		ldi r28,lo8(0)
+ 1524 069e D0E0      		ldi r29,hi8(0)
+ 1525 06a0 0F90      		pop __tmp_reg__
+ 1526 06a2 0F90      		pop __tmp_reg__
+ 1527 06a4 0F90      		pop __tmp_reg__
+ 1528 06a6 0F90      		pop __tmp_reg__
+ 1530               	.LM147:
+ 1531 06a8 00E0      		ldi r16,lo8(.LC28)
+ 1532 06aa 10E0      		ldi r17,hi8(.LC28)
+ 1533               	.L49:
+ 1535               	.LM148:
+ 1536 06ac DF93      		push r29
+ 1537 06ae CF93      		push r28
+ 1538 06b0 1F93      		push r17
+ 1539 06b2 0F93      		push r16
+ 1540 06b4 0E94 0000 		call printf
+ 1542               	.LM149:
+ 1543 06b8 60E8      		ldi r22,lo8(10000000)
+ 1544 06ba 76E9      		ldi r23,hi8(10000000)
+ 1545 06bc 88E9      		ldi r24,hlo8(10000000)
+ 1546 06be 90E0      		ldi r25,hhi8(10000000)
+ 1547 06c0 0E94 0000 		call my_nano_sleep
+ 1549               	.LM150:
+ 1550 06c4 0E94 0000 		call nrk_wait_until_next_period
+ 1552               	.LM151:
+ 1553 06c8 2196      		adiw r28,1
+ 1555               	.LM152:
+ 1556 06ca 0F90      		pop __tmp_reg__
+ 1557 06cc 0F90      		pop __tmp_reg__
+ 1558 06ce 0F90      		pop __tmp_reg__
+ 1559 06d0 0F90      		pop __tmp_reg__
+ 1560 06d2 00C0      		rjmp .L49
+ 1561               	/* epilogue: frame size=0 */
+ 1562               	/* epilogue: noreturn */
+ 1563               	/* epilogue end (size=0) */
+ 1564               	/* function Task4 size 43 (39) */
+ 1569               	.Lscope16:
+ 1571               		.stabd	78,0,0
+ 1572               		.data
+ 1573               	.LC29:
+ 1574 01c9 5461 736B 		.string	"Task3 PID=%d\r\n"
+ 1574      3320 5049 
+ 1574      443D 2564 
+ 1574      0D0A 00
+ 1575               	.LC30:
+ 1576 01d8 5461 736B 		.string	"Task3 cnt=%d\r\n"
+ 1576      3320 636E 
+ 1576      743D 2564 
+ 1576      0D0A 00
+ 1577               		.text
+ 1579               	.global	Task3
+ 1581               	Task3:
+ 1582               		.stabd	46,0,0
+ 1584               	.LM153:
+ 1585               	.LFBB17:
+ 1586               	/* prologue: frame size=0 */
+ 1587 06d4 0F93      		push r16
+ 1588 06d6 1F93      		push r17
+ 1589 06d8 CF93      		push r28
+ 1590 06da DF93      		push r29
+ 1591               	/* prologue end (size=4) */
+ 1593               	.LM154:
+ 1594 06dc 0E94 0000 		call nrk_get_pid
+ 1595 06e0 9927      		clr r25
+ 1596 06e2 9F93      		push r25
+ 1597 06e4 8F93      		push r24
+ 1598 06e6 80E0      		ldi r24,lo8(.LC29)
+ 1599 06e8 90E0      		ldi r25,hi8(.LC29)
+ 1600 06ea 9F93      		push r25
+ 1601 06ec 8F93      		push r24
+ 1602 06ee 0E94 0000 		call printf
+ 1603 06f2 C0E0      		ldi r28,lo8(0)
+ 1604 06f4 D0E0      		ldi r29,hi8(0)
+ 1605 06f6 0F90      		pop __tmp_reg__
+ 1606 06f8 0F90      		pop __tmp_reg__
+ 1607 06fa 0F90      		pop __tmp_reg__
+ 1608 06fc 0F90      		pop __tmp_reg__
+ 1610               	.LM155:
+ 1611 06fe 00E0      		ldi r16,lo8(.LC30)
+ 1612 0700 10E0      		ldi r17,hi8(.LC30)
+ 1613               	.L52:
+ 1615               	.LM156:
+ 1616 0702 DF93      		push r29
+ 1617 0704 CF93      		push r28
+ 1618 0706 1F93      		push r17
+ 1619 0708 0F93      		push r16
+ 1620 070a 0E94 0000 		call printf
+ 1622               	.LM157:
+ 1623 070e 60E8      		ldi r22,lo8(10000000)
+ 1624 0710 76E9      		ldi r23,hi8(10000000)
+ 1625 0712 88E9      		ldi r24,hlo8(10000000)
+ 1626 0714 90E0      		ldi r25,hhi8(10000000)
+ 1627 0716 0E94 0000 		call my_nano_sleep
+ 1629               	.LM158:
+ 1630 071a 0E94 0000 		call nrk_wait_until_next_period
+ 1632               	.LM159:
+ 1633 071e 2196      		adiw r28,1
+ 1635               	.LM160:
+ 1636 0720 0F90      		pop __tmp_reg__
+ 1637 0722 0F90      		pop __tmp_reg__
+ 1638 0724 0F90      		pop __tmp_reg__
+ 1639 0726 0F90      		pop __tmp_reg__
+ 1640 0728 00C0      		rjmp .L52
+ 1641               	/* epilogue: frame size=0 */
+ 1642               	/* epilogue: noreturn */
+ 1643               	/* epilogue end (size=0) */
+ 1644               	/* function Task3 size 43 (39) */
+ 1649               	.Lscope17:
+ 1651               		.stabd	78,0,0
+ 1652               		.data
+ 1653               	.LC31:
+ 1654 01e7 5461 736B 		.string	"Task2 PID=%d\r\n"
+ 1654      3220 5049 
+ 1654      443D 2564 
+ 1654      0D0A 00
+ 1655               	.LC32:
+ 1656 01f6 5461 736B 		.string	"Task2 cnt=%d\r\n"
+ 1656      3220 636E 
+ 1656      743D 2564 
+ 1656      0D0A 00
+ 1657               		.text
+ 1659               	.global	Task2
+ 1661               	Task2:
+ 1662               		.stabd	46,0,0
+ 1664               	.LM161:
+ 1665               	.LFBB18:
+ 1666               	/* prologue: frame size=0 */
+ 1667 072a 0F93      		push r16
+ 1668 072c 1F93      		push r17
+ 1669 072e CF93      		push r28
+ 1670 0730 DF93      		push r29
+ 1671               	/* prologue end (size=4) */
+ 1673               	.LM162:
+ 1674 0732 0E94 0000 		call nrk_get_pid
+ 1675 0736 9927      		clr r25
+ 1676 0738 9F93      		push r25
+ 1677 073a 8F93      		push r24
+ 1678 073c 80E0      		ldi r24,lo8(.LC31)
+ 1679 073e 90E0      		ldi r25,hi8(.LC31)
+ 1680 0740 9F93      		push r25
+ 1681 0742 8F93      		push r24
+ 1682 0744 0E94 0000 		call printf
+ 1683 0748 C0E0      		ldi r28,lo8(0)
+ 1684 074a D0E0      		ldi r29,hi8(0)
+ 1685 074c 0F90      		pop __tmp_reg__
+ 1686 074e 0F90      		pop __tmp_reg__
+ 1687 0750 0F90      		pop __tmp_reg__
+ 1688 0752 0F90      		pop __tmp_reg__
+ 1690               	.LM163:
+ 1691 0754 00E0      		ldi r16,lo8(.LC32)
+ 1692 0756 10E0      		ldi r17,hi8(.LC32)
+ 1693               	.L55:
+ 1695               	.LM164:
+ 1696 0758 DF93      		push r29
+ 1697 075a CF93      		push r28
+ 1698 075c 1F93      		push r17
+ 1699 075e 0F93      		push r16
+ 1700 0760 0E94 0000 		call printf
+ 1702               	.LM165:
+ 1703 0764 60E8      		ldi r22,lo8(10000000)
+ 1704 0766 76E9      		ldi r23,hi8(10000000)
+ 1705 0768 88E9      		ldi r24,hlo8(10000000)
+ 1706 076a 90E0      		ldi r25,hhi8(10000000)
+ 1707 076c 0E94 0000 		call my_nano_sleep
+ 1709               	.LM166:
+ 1710 0770 0E94 0000 		call nrk_wait_until_next_period
+ 1712               	.LM167:
+ 1713 0774 2196      		adiw r28,1
+ 1715               	.LM168:
+ 1716 0776 0F90      		pop __tmp_reg__
+ 1717 0778 0F90      		pop __tmp_reg__
+ 1718 077a 0F90      		pop __tmp_reg__
+ 1719 077c 0F90      		pop __tmp_reg__
+ 1720 077e 00C0      		rjmp .L55
+ 1721               	/* epilogue: frame size=0 */
+ 1722               	/* epilogue: noreturn */
+ 1723               	/* epilogue end (size=0) */
+ 1724               	/* function Task2 size 43 (39) */
+ 1729               	.Lscope18:
+ 1731               		.stabd	78,0,0
+ 1732               		.data
+ 1733               	.LC33:
+ 1734 0205 5461 736B 		.string	"Task1 PID=%d\r\n"
+ 1734      3120 5049 
+ 1734      443D 2564 
+ 1734      0D0A 00
+ 1735               	.LC34:
+ 1736 0214 5461 736B 		.string	"Task1 cnt=%d\r\n"
+ 1736      3120 636E 
+ 1736      743D 2564 
+ 1736      0D0A 00
+ 1737               		.text
+ 1739               	.global	Task1
+ 1741               	Task1:
+ 1742               		.stabd	46,0,0
+ 1744               	.LM169:
+ 1745               	.LFBB19:
+ 1746               	/* prologue: frame size=0 */
+ 1747 0780 0F93      		push r16
+ 1748 0782 1F93      		push r17
+ 1749 0784 CF93      		push r28
+ 1750 0786 DF93      		push r29
+ 1751               	/* prologue end (size=4) */
+ 1753               	.LM170:
+ 1754 0788 0E94 0000 		call nrk_get_pid
+ 1755 078c 9927      		clr r25
+ 1756 078e 9F93      		push r25
+ 1757 0790 8F93      		push r24
+ 1758 0792 80E0      		ldi r24,lo8(.LC33)
+ 1759 0794 90E0      		ldi r25,hi8(.LC33)
+ 1760 0796 9F93      		push r25
+ 1761 0798 8F93      		push r24
+ 1762 079a 0E94 0000 		call printf
+ 1763 079e C0E0      		ldi r28,lo8(0)
+ 1764 07a0 D0E0      		ldi r29,hi8(0)
+ 1765 07a2 0F90      		pop __tmp_reg__
+ 1766 07a4 0F90      		pop __tmp_reg__
+ 1767 07a6 0F90      		pop __tmp_reg__
+ 1768 07a8 0F90      		pop __tmp_reg__
+ 1770               	.LM171:
+ 1771 07aa 00E0      		ldi r16,lo8(.LC34)
+ 1772 07ac 10E0      		ldi r17,hi8(.LC34)
+ 1773               	.L58:
+ 1775               	.LM172:
+ 1776 07ae DF93      		push r29
+ 1777 07b0 CF93      		push r28
+ 1778 07b2 1F93      		push r17
+ 1779 07b4 0F93      		push r16
+ 1780 07b6 0E94 0000 		call printf
+ 1782               	.LM173:
+ 1783 07ba 60E8      		ldi r22,lo8(150000000)
+ 1784 07bc 71ED      		ldi r23,hi8(150000000)
+ 1785 07be 80EF      		ldi r24,hlo8(150000000)
+ 1786 07c0 98E0      		ldi r25,hhi8(150000000)
+ 1787 07c2 0E94 0000 		call my_nano_sleep
+ 1789               	.LM174:
+ 1790 07c6 0E94 0000 		call nrk_wait_until_next_period
+ 1792               	.LM175:
+ 1793 07ca 2196      		adiw r28,1
+ 1795               	.LM176:
+ 1796 07cc 0F90      		pop __tmp_reg__
+ 1797 07ce 0F90      		pop __tmp_reg__
+ 1798 07d0 0F90      		pop __tmp_reg__
+ 1799 07d2 0F90      		pop __tmp_reg__
+ 1800 07d4 00C0      		rjmp .L58
+ 1801               	/* epilogue: frame size=0 */
+ 1802               	/* epilogue: noreturn */
+ 1803               	/* epilogue end (size=0) */
+ 1804               	/* function Task1 size 43 (39) */
+ 1809               	.Lscope19:
+ 1811               		.stabd	78,0,0
+ 1812               		.comm sc,4,1
+ 1813               		.comm _nrk_signal_list,4,1
+ 1814               		.comm nrk_idle_task_stk,128,1
+ 1815               		.comm nrk_kernel_stk_ptr,2,1
+ 1816               		.comm error_task,1,1
+ 1817               		.comm error_num,1,1
+ 1818               		.comm _nrk_prev_timer_val,1,1
+ 1819               		.comm _nrk_time_trigger,1,1
+ 1820               		.comm app_timer0_callback,2,1
+ 1821               		.comm app_timer0_prescale,1,1
+ 1822               		.comm Stack1,128,1
+ 1823               		.comm TaskOne,36,1
+ 1824               		.comm Stack2,128,1
+ 1825               		.comm TaskTwo,36,1
+ 1841               	.Letext0:
+ 1842               	/* File "main.c": code 1003 = 0x03eb ( 883), prologues  92, epilogues  28 */
+DEFINED SYMBOLS
+                            *ABS*:00000000 main.c
+     /tmp/ccfrYCj3.s:2      *ABS*:0000003f __SREG__
+     /tmp/ccfrYCj3.s:3      *ABS*:0000003e __SP_H__
+     /tmp/ccfrYCj3.s:4      *ABS*:0000003d __SP_L__
+     /tmp/ccfrYCj3.s:5      *ABS*:00000000 __tmp_reg__
+     /tmp/ccfrYCj3.s:6      *ABS*:00000001 __zero_reg__
+     /tmp/ccfrYCj3.s:137    .text:00000000 nrk_create_taskset
+                            *COM*:00000024 TaskOne
+     /tmp/ccfrYCj3.s:1741   .text:00000780 Task1
+                            *COM*:00000080 Stack1
+                            *COM*:00000024 TaskTwo
+     /tmp/ccfrYCj3.s:1661   .text:0000072a Task2
+                            *COM*:00000080 Stack2
+     /tmp/ccfrYCj3.s:345    .text:00000182 Task12
+     /tmp/ccfrYCj3.s:419    .text:000001d0 main
+     /tmp/ccfrYCj3.s:485    .text:00000214 my_nano_sleep
+     /tmp/ccfrYCj3.s:621    .text:000002cc Task16
+     /tmp/ccfrYCj3.s:701    .text:00000322 Task15
+     /tmp/ccfrYCj3.s:781    .text:00000378 Task14
+     /tmp/ccfrYCj3.s:861    .text:000003ce Task13
+     /tmp/ccfrYCj3.s:941    .text:00000424 Task11
+     /tmp/ccfrYCj3.s:1021   .text:0000047a Task10
+     /tmp/ccfrYCj3.s:1101   .text:000004d0 Task9
+     /tmp/ccfrYCj3.s:1181   .text:00000526 Task8
+     /tmp/ccfrYCj3.s:1261   .text:0000057c Task7
+     /tmp/ccfrYCj3.s:1341   .text:000005d2 Task6
+     /tmp/ccfrYCj3.s:1421   .text:00000628 Task5
+     /tmp/ccfrYCj3.s:1501   .text:0000067e Task4
+     /tmp/ccfrYCj3.s:1581   .text:000006d4 Task3
+                            *COM*:00000004 sc
+                            *COM*:00000004 _nrk_signal_list
+                            *COM*:00000080 nrk_idle_task_stk
+                            *COM*:00000002 nrk_kernel_stk_ptr
+                            *COM*:00000001 error_task
+                            *COM*:00000001 error_num
+                            *COM*:00000001 _nrk_prev_timer_val
+                            *COM*:00000001 _nrk_time_trigger
+                            *COM*:00000002 app_timer0_callback
+                            *COM*:00000001 app_timer0_prescale
+
+UNDEFINED SYMBOLS
+__do_copy_data
+__do_clear_bss
+nrk_task_set_entry_function
+nrk_task_set_stk
+nrk_activate_task
+nrk_get_pid
+printf
+_nrk_timer_tick
+nrk_wait_until_next_period
+__stack
+nrk_setup_ports
+nrk_setup_uart
+puts
+nrk_init
+nrk_time_set
+nrk_start
+exit
+__udivmodsi4
+nrk_spin_wait_us
