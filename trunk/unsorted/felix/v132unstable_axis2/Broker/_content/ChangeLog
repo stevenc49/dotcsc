@@ -1,0 +1,52 @@
+2009-11-19	Nima Kaviani	<nimak@ece.ubc.ca> v.1.2.9
+	* Port Scanning for the Modem is done automatically. The Gateway gets plugged in,
+	and as soon as the installer gets turned on, the port scanner starts looking for
+	the modem gateway. If the modem gateway is detected, the modem gets hooked to the
+	broker and the broker start using SMS as a publisher.
+	
+	* The SMS Installer is a lot more stable now. It automatically checks into the list
+	of bundles in the bundle context and detects which of the required functions for
+	running SMS is already installed. It installs the ones that need to be installed and
+	updates those that should be updated, and finally, starts those that need to starts.
+	Things happen a lot more smoother for a user.
+	
+	* At the time of scanning ports, a progress bar is added to show what ports are being
+	scanned and how many more ports are remained to be scanned.
+
+2009-10-14	Nima Kaviani	<nimak@ece.ubc.ca> v.1.2.8
+	* A SMSInstaller bundle is added to the system that enables platform 
+	specific installation of the SMS module and the required libraries. 
+	
+	* There is configuration file for the SMS module located in "configurations/services/" 
+	that can be switched ON or OFF. If the switch is ON, the SMS modules and libraries will 
+	be installed, if it is OFF, the module and the libraries will be uninstalled.
+
+2009-10-7	Nima Kaviani	<nimak@ece.ubc.ca> v.1.2.8
+	* The connection timeout issue for DBCP is solved. The connections no
+	longer get expired because of sitting idle in the pool for so long.
+	
+	* The synchronization issue with multiple objects trying to access the
+	broker is solved. Using DBCP, each client is assigned its own
+	Connection object to connect to the DB and thus there is no need to
+	synchronize the connections.
+	
+	* The serial port for the SMS module can be configured using the
+	properties file in the broker. The file is called
+	"ca.ubc.magic.broker.publisher.service.sms.SMSPublisherDS.properties"
+	
+	* The configuration file for DBCP now can be configured to define the
+	parameters for DBCP connection eviction and eviction idle time in the
+	"ca.ubc.magic.osgibroker.storage.mysql.properties".
+
+	* The broker now comes with the WebConsole module, enabling
+	configuration of the broker to happen using the WebConsole without
+	having to deal with the command line. The WebConsole is accessible
+	from http://<your-host-name>:8800/system/console
+
+2009-09-20	Nima Kaviani <nimak@ece.ubc.ca> v.1.2.7
+	* DBCP is now used for checking the connections 
+
+
+Copyright 2009 - The MAGIC Lab. University of British Columbia
+Copyright and distirbution of this file, with or without modificatiosn are
+permitted provieded the copyright notice and this notice are preserved.

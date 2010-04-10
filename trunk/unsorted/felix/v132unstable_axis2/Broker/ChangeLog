@@ -1,0 +1,124 @@
+2010-03-22	Nima Kaviani	<nimak@ece.ubc.ca> v.1.3.2
+	* Default Password for the DB is changed
+	* UnsubscribeAll functionality added. This allows one client to unsubscribe from
+	  all topics it is registered to. This is done by not specifying the name of the 
+	  topic that the client would like to usubscribe from. If the topic is NULL, the 
+	  client will be unsubscribed from all topics (Care should be given in using this
+	  functionality).
+	
+	* The Queue full issue fixed. The queue size for the received messages by a polling
+	  client was set to be 1000. A client, idle for a long time, would render the queue
+	  full. Now upon a queue full situation, the oldest message in the queue would be 
+	  replaced by a new one.
+
+2010-02-03	Nima Kaviani	<nimak@ece.ubc.ca> v.1.3.1
+	* The clients can query content elements or state elements of a topic
+	  individually and by specifying the ID for the respective content or 
+	  state without having to poll for the entire state or content of a 
+	  topic. Same works for deleting the elements of content or state.
+	
+	* NotificationTopics are added
+		** For each topic, "topicname", that a client registers to, the broker 
+		   automatically creates a notification topic with the following format: 
+		   "topicname__notification__".
+		   
+		** No client is allowed to subscribe to a NotificationTopic or post events
+		   to the NotificationTopic. All messages published to a NotificationTopic
+		   and all the clients subscribed under a NotificationTopic are internally 
+		   handled by the Broker. The clients can only poll the NotificationTopics
+		   with notifications mainly on subscription/unsubscription events and 
+		   changes to the content or state of a topic.
+		   
+		** The Broker sends notifications to the NotificationTopic associated with 
+		    each topic, indicating changes (e.g., add, delete, update) to the content
+			of a topic or to the state attributes of a topic.
+		   
+	* Expiration for client subscriptions is added to the broker. 	
+		** During subscription to the /osgibroker/subscribe servlet, each client can 
+		   specify an "expires" parameter with its value specifying the number of seconds
+		   before the client subscription expires. If no "expires" parameter is defined,
+		   the broker assumes that the registration for the client will never expire.
+		
+		** A new servlet named /osgibroker/keepAlive is added to the Broker. the 
+		   /osgibroker/keepAlive server is used to renew subscription of a client 
+		   with the broker. This servlet requires "clientID" and "topic" as its 
+		   mandatory parameters specifying the ID for the client and the topic
+		   for which the subscription will be renewed. The servlet also accepts
+		   an "expires" parameter, indicating the new number of seconds that the
+		   client will remain subscribed with the broker after the latest call to 
+		   the /osgibroker/keepAlive servlet. A client that is initially subscribed
+		   as a permanent client (i.e., without an "expires" parameter during its
+		   subscription), can be changed to a temporary client by calling the
+		   /osgibroker/keepAlive function for this client under the specified topic
+		   and with an "expires" parameter and value defined for it. It is important
+		   to note that, once a client becomes a temporary client, i.e., if the server
+		   tracks its expiration, it is no longer possible to make the client a 
+		   permanent client and from there on, the subscription of the client should
+		   be controled by the responsible client.
+		   
+		** In the /osgibroker/keepAlive servlet, in case a client is not subscribed
+		   with the specified topic, or the client has already expired once the 
+		   /osgibroker/keepAlive servlet is called, the broker returns an error
+		   response 417 (SC_EXPECTATION_FAILUE), with the following error message:
+		   "No Client with this ClientID is alive".
+		   
+		** NOTE: It is important to mention that subscription expiratioins happen on
+		         a per topic basis. That is, the client can define an expiration for 
+				 every topic that it registers to. If an expiration is defined for a
+				 topic, it is the role of the client to make sure that renewals happen,
+				 if necessary. The Broker will automatically unsubscribe the client
+				 from a topic and its NotificationTopic upon expiration of its registration
+				 time.
+
+2009-11-19	Nima Kaviani	<nimak@ece.ubc.ca> v.1.2.9
+	* Port Scanning for the Modem is done automatically. The Gateway gets plugged in,
+	and as soon as the installer gets turned on, the port scanner starts looking for
+	the modem gateway. If the modem gateway is detected, the modem gets hooked to the
+	broker and the broker start using SMS as a publisher.
+	
+	* The SMS Installer is a lot more stable now. It automatically checks into the list
+	of bundles in the bundle context and detects which of the required functions for
+	running SMS is already installed. It installs the ones that need to be installed and
+	updates those that should be updated, and finally, starts those that need to starts.
+	Things happen a lot more smoother for a user.
+	
+	* At the time of scanning ports, a progress bar is added to show what ports are being
+	scanned and how many more ports are remained to be scanned.
+
+2009-10-14	Nima Kaviani	<nimak@ece.ubc.ca> v.1.2.8
+	* A SMSInstaller bundle is added to the system that enables platform 
+	specific installation of the SMS module and the required libraries. 
+	
+	* There is configuration file for the SMS module located in "configurations/services/" 
+	that can be switched ON or OFF. If the switch is ON, the SMS modules and libraries will 
+	be installed, if it is OFF, the module and the libraries will be uninstalled.
+
+2009-10-7	Nima Kaviani	<nimak@ece.ubc.ca> v.1.2.8
+	* The connection timeout issue for DBCP is solved. The connections no
+	longer get expired because of sitting idle in the pool for so long.
+	
+	* The synchronization issue with multiple objects trying to access the
+	broker is solved. Using DBCP, each client is assigned its own
+	Connection object to connect to the DB and thus there is no need to
+	synchronize the connections.
+	
+	* The serial port for the SMS module can be configured using the
+	properties file in the broker. The file is called
+	"ca.ubc.magic.broker.publisher.service.sms.SMSPublisherDS.properties"
+	
+	* The configuration file for DBCP now can be configured to define the
+	parameters for DBCP connection eviction and eviction idle time in the
+	"ca.ubc.magic.osgibroker.storage.mysql.properties".
+
+	* The broker now comes with the WebConsole module, enabling
+	configuration of the broker to happen using the WebConsole without
+	having to deal with the command line. The WebConsole is accessible
+	from http://<your-host-name>:8800/system/console
+
+2009-09-20	Nima Kaviani <nimak@ece.ubc.ca> v.1.2.7
+	* DBCP is now used for checking the connections 
+
+
+Copyright 2009 - The MAGIC Lab. University of British Columbia
+Copyright and distirbution of this file, with or without modificatiosn are
+permitted provieded the copyright notice and this notice are preserved.
